@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>form-boss</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0; --surface: #fcfcfb; --border: #dedcd5;
+  --text: #0b0b0b; --text-2: #52514e; --text-3: #7d7b74;
+  --grid: #e6e4de; --band: rgba(42,120,214,.07); --accent: #2a78d6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #0ca30c; --warn: #c98500; --fault: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --border: #33332f;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #8f8d84;
+    --grid: #2b2b28; --band: rgba(57,135,229,.12); --accent: #3987e5;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --good: #0ca30c; --warn: #fab219; --fault: #e66767;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+  border-bottom: 1px solid var(--border); background: var(--surface); }
+h1 { font-size: 18px; margin: 0; text-transform: capitalize; }
+header .file { color: var(--text-3); font-size: 13px; }
+header .summary { margin-left: auto; color: var(--text-2); }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; padding: 16px 20px;
+  max-width: 1500px; margin: 0 auto; }
+@media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.stage-wrap { display: flex; justify-content: center; background: #000; border-radius: 10px 10px 0 0;
+  overflow: hidden; }
+.stage { position: relative; line-height: 0; }
+video { display: block; max-width: 100%; max-height: 64vh; }
+canvas#ov { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 12px; }
+button, select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:hover { border-color: var(--text-3); }
+button#play { min-width: 68px; font-weight: 600; }
+.transport label { color: var(--text-2); display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.transport .time { font-variant-numeric: tabular-nums; color: var(--text-2); margin-left: auto; }
+.chart-card { margin-top: 16px; padding: 12px 12px 8px; }
+.chart-head { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 0 4px 6px; }
+.chart-head h2 { margin: 0; font-size: 14px; }
+.legend { display: flex; gap: 14px; color: var(--text-2); font-size: 13px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle;
+  margin-right: 5px; }
+.chart-head .hint { margin-left: auto; color: var(--text-3); font-size: 12px; }
+#chart { position: relative; cursor: crosshair; touch-action: none; }
+#chart svg { display: block; width: 100%; }
+#chart text { fill: var(--text-3); font-size: 11px; }
+#chart text.dl { fill: var(--text-2); font-size: 12px; }
+#tip { position: absolute; top: 6px; pointer-events: none; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15); white-space: nowrap; display: none;
+  font-variant-numeric: tabular-nums; }
+#tip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+#tip .t { color: var(--text-3); margin-bottom: 2px; }
+aside { display: flex; flex-direction: column; gap: 16px; }
+aside section { padding: 12px 14px; }
+aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3);
+  margin: 0 0 8px; font-weight: 600; }
+.now { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.now div b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.now div span { color: var(--text-2); font-size: 12px; }
+.now div span i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+#phase { margin-top: 8px; color: var(--text-2); }
+ul.find { list-style: none; margin: 0; padding: 0; }
+ul.find li { display: grid; grid-template-columns: 20px 1fr; gap: 6px; padding: 4px 0; }
+ul.find .ic { font-weight: 700; text-align: center; }
+.ic.good { color: var(--good); } .ic.warn { color: var(--warn); } .ic.fault { color: var(--fault); }
+.ic.info { color: var(--text-3); }
+ul.find b { font-weight: 600; }
+ul.find .fix { color: var(--text-2); display: block; margin-top: 2px; }
+.rep { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.rep.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.rep-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.rep-head strong { font-size: 15px; }
+.rep-head .meta { color: var(--text-3); font-size: 12px; }
+.rep-head .btns { margin-left: auto; display: flex; gap: 6px; }
+.rep-head button { padding: 2px 8px; font-size: 12px; }
+.props { color: var(--text-2); }
+details { margin-top: 16px; padding: 10px 14px; }
+details summary { cursor: pointer; color: var(--text-2); }
+table { border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 4px 12px 4px 0; text-align: right; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-3); font-weight: 500; }
+.scroll-x { overflow-x: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1><span class="file" id="file"></span><span class="summary" id="summary"></span>
+</header>
+<main>
+  <div>
+    <div class="card">
+      <div class="stage-wrap"><div class="stage">
+        <video id="v" playsinline muted preload="auto"></video><canvas id="ov"></canvas>
+      </div></div>
+      <div class="transport">
+        <button id="play">Play</button>
+        <button id="prev" title="Previous frame (left arrow)">&#9664; frame</button>
+        <button id="next" title="Next frame (right arrow)">frame &#9654;</button>
+        <select id="speed" title="Playback speed">
+          <option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option>
+        </select>
+        <label><input type="checkbox" id="tSkel" checked> Skeleton</label>
+        <label><input type="checkbox" id="tBar" checked> <span id="pathName"></span></label>
+        <label><input type="checkbox" id="tAng" checked> Labels</label>
+        <label><input type="checkbox" id="tLoop"> Loop rep</label>
+        <span class="time" id="time"></span>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head">
+        <h2>Measurements over the set</h2>
+        <div class="legend" id="legend"></div>
+        <span class="hint">Click or drag to scrub</span>
+      </div>
+      <div id="chart"><div id="tip"></div></div>
+    </div>
+    <details class="card"><summary>Per-rep measurements</summary><div class="scroll-x" id="table"></div></details>
+  </div>
+  <aside>
+    <section class="card">
+      <h2>Current frame</h2>
+      <div class="now" id="now"></div>
+      <div id="phase"></div>
+    </section>
+    <section class="card"><h2>Camera setup</h2><ul class="find" id="setup"></ul></section>
+    <section class="card"><h2>Reps</h2><div id="reps"></div></section>
+    <section class="card"><h2>Estimated proportions</h2><div class="props" id="props"></div></section>
+  </aside>
+</main>
+<script>const D = /*DATA*/null;</script>
+<script>
+const $ = id => document.getElementById(id);
+const v = $("v"), cv = $("ov"), ctx = cv.getContext("2d");
+const fps = D.fps, N = D.n;
+const ICON = { good: "✓", warn: "▲", fault: "✕", info: "•" };
+const LABEL = { good: "Good", warn: "Warning", fault: "Fault", info: "Note" };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reps = D.reps.map(r => ({ ...r, s: Math.round(r.start_s * fps), b: Math.round(r.bottom_s * fps),
+  e: Math.round(r.end_s * fps) }));
+let frame = 0, selected = null;
+
+// ---------- static panels ----------
+const liftName = D.lift.replace(/_/g, " ");
+const cap = w => w[0].toUpperCase() + w.slice(1);
+const SER = D.series.map((sr, i) => ({ ...sr, col: `--s${i + 1}` }));
+const fmt = (sr, f) => sr.values[f].toFixed(0) + sr.unit;
+$("title").textContent = liftName + " analysis";
+$("pathName").textContent = cap(D.pathName) + " path";
+$("legend").innerHTML = SER.map(sr => `<span><i style="background:var(${sr.col})"></i>${esc(sr.label)}${sr.unit === "°" ? "" : ` (${esc(sr.unit)})`}</span>`).join("");
+$("now").innerHTML = SER.map((sr, i) => `<div><b id="n${i}"></b><span><i style="background:var(${sr.col})"></i>${esc(sr.label.toLowerCase())}</span></div>`).join("");
+$("file").textContent = D.name;
+document.title = `${liftName} – ${D.name}`;
+const count = st => reps.reduce((a, r) => a + r.findings.filter(f => f.status === st).length, 0);
+const setupBad = D.setup.filter(s => !s.ok).length;
+$("summary").textContent = [`${reps.length} rep${reps.length === 1 ? "" : "s"}`, `${count("fault")} faults`,
+  `${count("warn")} warnings`, `${setupBad} camera setup issue${setupBad === 1 ? "" : "s"}`].join(" · ");
+
+$("setup").innerHTML = D.setup.map(s => `<li><span class="ic ${s.ok ? "good" : "warn"}"
+  title="${s.ok ? "OK" : "Needs fixing"}">${s.ok ? ICON.good : ICON.warn}</span>
+  <span><b>${esc(s.name)}:</b> ${esc(s.detail)}${s.fix ? `<span class="fix">${esc(s.fix)}</span>` : ""}</span></li>`).join("");
+
+const p = D.proportions;
+$("props").textContent = `Femur ${p.femur_cm.toFixed(0)} cm, shin ${p.tibia_cm.toFixed(0)} cm, torso ` +
+  `${p.torso_cm.toFixed(0)} cm. Femur-to-torso ratio ${p.femur_to_torso.toFixed(2)}.`;
+
+$("reps").innerHTML = reps.length ? reps.map((r, i) => `<div class="rep" data-i="${i}">
+  <div class="rep-head"><strong>Rep ${r.number}</strong>
+    <span class="meta">${r.start_s.toFixed(1)}–${r.end_s.toFixed(1)}s${r.partial ? " · partial" : ""}</span>
+    <span class="btns"><button data-act="play">Play</button><button data-act="bottom">${esc(cap(D.phases[1]))}</button></span></div>
+  <ul class="find">${r.findings.map(f => `<li><span class="ic ${f.status}" title="${LABEL[f.status]}">${ICON[f.status]}</span>
+    <span><b>${esc(f.check)}:</b> ${esc(f.message)}</span></li>`).join("")}</ul></div>`).join("")
+  : "<p>No reps detected in this clip.</p>";
+
+const mKeys = reps.length ? Object.keys(reps[0].metrics) : [];
+$("table").innerHTML = `<table><tr><th>Measurement</th>${reps.map(r => `<th>Rep ${r.number}</th>`).join("")}</tr>` +
+  mKeys.map(k => `<tr><td>${esc(k.replace(/_/g, " "))}</td>${reps.map(r => `<td>${r.metrics[k].toFixed(1)}</td>`).join("")}</tr>`).join("") + "</table>";
+
+// ---------- overlay drawing ----------
+function repAt(f) { return reps.findIndex(r => f >= r.s && f <= r.e); }
+
+function drawOverlay(f) {
+  const W = D.width, H = D.height, k = Math.min(W, H) / 720;
+  ctx.clearRect(0, 0, W, H);
+  const pts = D.lm[f], vis = D.vis[f];
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if ($("tSkel").checked) {
+    ctx.strokeStyle = "#5cc8ff"; ctx.lineWidth = 3.5 * k;
+    ctx.beginPath();
+    for (const [a, b] of D.skeleton) if (vis[a] && vis[b]) { ctx.moveTo(pts[a][0], pts[a][1]); ctx.lineTo(pts[b][0], pts[b][1]); }
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
+    for (let j = 11; j < 33; j++) if (vis[j]) { ctx.beginPath(); ctx.arc(pts[j][0], pts[j][1], 4.5 * k, 0, 7); ctx.fill(); }
+  }
+  if ($("tBar").checked) {
+    const ri = repAt(f), s = ri >= 0 ? reps[ri].s : Math.max(0, f - Math.round(1.5 * fps));
+    ctx.strokeStyle = "#ff5a4d"; ctx.lineWidth = 3 * k;
+    ctx.beginPath();
+    for (let i = s; i <= f; i++) i === s ? ctx.moveTo(D.path[i][0], D.path[i][1]) : ctx.lineTo(D.path[i][0], D.path[i][1]);
+    ctx.stroke();
+    ctx.fillStyle = "#ff5a4d"; ctx.beginPath(); ctx.arc(D.path[f][0], D.path[f][1], 7 * k, 0, 7); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5 * k; ctx.stroke();
+  }
+  if ($("tAng").checked) {
+    // pin each measurement to its joint, on the side the camera sees best
+    for (const sr of SER) if (sr.tag) {
+      const j = vis[sr.tag[0]] >= vis[sr.tag[1]] ? sr.tag[0] : sr.tag[1];
+      tag(pts[j], `${sr.label.toLowerCase()} ${fmt(sr, f)}`, k);
+    }
+  }
+}
+function tag(pt, text, k) {
+  ctx.font = `600 ${Math.round(17 * k)}px system-ui, sans-serif`;
+  const w = ctx.measureText(text).width, x = pt[0] + 12 * k, y = pt[1] - 10 * k;
+  ctx.fillStyle = "rgba(0,0,0,.65)";
+  ctx.beginPath(); ctx.roundRect(x - 5 * k, y - 17 * k, w + 10 * k, 23 * k, 5 * k); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.fillText(text, x, y);
+}
+
+// ---------- chart ----------
+let cx = null, playhead = null, cross = null;
+function buildChart() {
+  const el = $("chart"), W = el.clientWidth, H = 220, m = { l: 34, r: 108, t: 20, b: 22 };
+  const all = SER.flatMap(sr => sr.values);
+  const lo = Math.min(0, Math.floor(Math.min(...all) / 15) * 15), hi = Math.max(90, Math.ceil(Math.max(...all) / 45) * 45);
+  const X = f => m.l + f / (N - 1) * (W - m.l - m.r), Y = val => m.t + (hi - val) / (hi - lo) * (H - m.t - m.b);
+  cx = { X, W, m, inv: px => Math.max(0, Math.min(N - 1, Math.round((px - m.l) / (W - m.l - m.r) * (N - 1)))) };
+  let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(SER.map(sr => sr.label).join(", "))} over time">`;
+  reps.forEach(r => {
+    s += `<rect x="${X(r.s)}" y="${m.t}" width="${X(r.e) - X(r.s)}" height="${H - m.t - m.b}" fill="var(--band)" rx="3"/>`;
+    s += `<line x1="${X(r.b)}" x2="${X(r.b)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--text-3)" stroke-dasharray="2 3" stroke-width="1"/>`;
+    s += `<text x="${X(r.s) + 4}" y="${m.t - 6}">Rep ${r.number}</text>`;
+  });
+  for (let g = Math.ceil(lo / 45) * 45; g <= hi; g += 45) {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--grid)" stroke-width="${g === 0 ? 1.5 : 1}"/>`;
+    s += `<text x="${m.l - 6}" y="${Y(g) + 4}" text-anchor="end">${g}</text>`;
+  }
+  const dur = (N - 1) / fps, step = dur > 40 ? 10 : dur > 20 ? 5 : dur > 8 ? 2 : 1;
+  for (let t = 0; t <= dur; t += step) s += `<text x="${X(t * fps)}" y="${H - 6}" text-anchor="middle">${t}s</text>`;
+  SER.forEach(({ values, col }) => {
+    const d = values.map((val, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(val).toFixed(1)}`).join("");
+    s += `<path d="${d}" fill="none" stroke="var(${col})" stroke-width="2" stroke-linejoin="round"/>`;
+  });
+  // direct labels at the line ends, nudged apart
+  const ends = SER.map(sr => ({ name: sr.label.split(" ").slice(0, 2).join(" "), y: Y(sr.values[N - 1]) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) ends[i].y = Math.max(ends[i].y, ends[i - 1].y + 14);
+  ends.forEach(e => s += `<text class="dl" x="${W - m.r + 6}" y="${e.y + 4}">${e.name}</text>`);
+  s += `<line id="cross" y1="${m.t}" y2="${H - m.b}" stroke="var(--text-3)" stroke-width="1" visibility="hidden"/>`;
+  s += `<line id="ph" y1="${m.t - 4}" y2="${H - m.b}" stroke="var(--text)" stroke-width="2"/></svg>`;
+  el.querySelector("svg")?.remove();
+  el.insertAdjacentHTML("beforeend", s);
+  playhead = $("ph"); cross = $("cross");
+  setPlayhead(frame);
+}
+function setPlayhead(f) { if (playhead) { const x = cx.X(f); playhead.setAttribute("x1", x); playhead.setAttribute("x2", x); } }
+
+const chartEl = $("chart"), tip = $("tip");
+let dragging = false;
+function chartFrame(ev) { return cx.inv(ev.clientX - chartEl.getBoundingClientRect().left); }
+chartEl.addEventListener("pointerdown", ev => { dragging = true; chartEl.setPointerCapture(ev.pointerId); selected = null; seek(chartFrame(ev)); });
+chartEl.addEventListener("pointerup", () => dragging = false);
+chartEl.addEventListener("pointermove", ev => {
+  const f = chartFrame(ev), x = cx.X(f);
+  if (dragging) seek(f);
+  cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
+  tip.innerHTML = `<div class="t">${(f / fps).toFixed(2)}s</div>` + SER.map(sr =>
+    `<div><i style="background:var(${sr.col})"></i>${esc(sr.label)} <b>${fmt(sr, f)}</b></div>`).join("");
+  tip.style.display = "block";
+  const tw = tip.offsetWidth;
+  tip.style.left = (x + 12 + tw > cx.W ? x - tw - 12 : x + 12) + "px";
+});
+chartEl.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+
+// ---------- playback ----------
+function render(f) {
+  frame = Math.max(0, Math.min(N - 1, f));
+  drawOverlay(frame);
+  setPlayhead(frame);
+  SER.forEach((sr, i) => $("n" + i).textContent = fmt(sr, frame));
+  $("time").textContent = `${(frame / fps).toFixed(2)}s · frame ${frame}/${N - 1}`;
+  const ri = repAt(frame);
+  $("phase").textContent = ri < 0 ? "Between reps"
+    : `Rep ${reps[ri].number}: ${D.phases[frame < reps[ri].b ? 0 : frame === reps[ri].b ? 1 : 2]}`;
+  document.querySelectorAll(".rep").forEach((el, i) => el.classList.toggle("active", i === ri));
+}
+function seek(f) { v.currentTime = Math.max(0, Math.min(N - 1, f)) / fps + 0.001; render(f); }
+function tick() {
+  const f = Math.round((v.currentTime - 0.001) * fps);
+  if (selected !== null && !v.paused && f >= reps[selected].e) {
+    if ($("tLoop").checked) { seek(reps[selected].s); } else { v.pause(); selected = null; }
+  }
+  if (f !== frame) render(f);
+}
+if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
+  const cb = (now, meta) => { const f = Math.round(meta.mediaTime * fps); if (f !== frame) render(f); v.requestVideoFrameCallback(cb); };
+  v.requestVideoFrameCallback(cb);
+}
+(function loop() { tick(); requestAnimationFrame(loop); })();
+
+const toggle = () => { if (v.paused) { if (v.ended || frame >= N - 1) seek(0); v.play(); } else v.pause(); };
+$("play").onclick = toggle;
+v.addEventListener("play", () => $("play").textContent = "Pause");
+v.addEventListener("pause", () => $("play").textContent = "Play");
+$("prev").onclick = () => { v.pause(); seek(frame - 1); };
+$("next").onclick = () => { v.pause(); seek(frame + 1); };
+$("speed").onchange = e => v.playbackRate = +e.target.value;
+["tSkel", "tBar", "tAng"].forEach(id => $(id).onchange = () => drawOverlay(frame));
+document.addEventListener("keydown", ev => {
+  if (ev.target.tagName === "SELECT" || ev.target.tagName === "INPUT") return;
+  if (ev.code === "Space") { ev.preventDefault(); toggle(); }
+  if (ev.code === "ArrowLeft") { ev.preventDefault(); v.pause(); seek(frame - 1); }
+  if (ev.code === "ArrowRight") { ev.preventDefault(); v.pause(); seek(frame + 1); }
+});
+$("reps").addEventListener("click", ev => {
+  const card = ev.target.closest(".rep"); if (!card) return;
+  const i = +card.dataset.i, act = ev.target.dataset.act || "play";
+  if (act === "bottom") { v.pause(); selected = null; seek(reps[i].b); }
+  else { selected = i; seek(reps[i].s); v.play(); }
+});
+
+cv.width = D.width; cv.height = D.height;
+v.src = D.video;
+v.addEventListener("loadeddata", () => {
+  const m = location.hash.match(/t=([\d.]+)/);
+  seek(m ? Math.round(+m[1] * fps) : 0);
+}, { once: true });
+buildChart(); render(0);
+new ResizeObserver(buildChart).observe(chartEl);
+</script>
+</body>
+</html>
