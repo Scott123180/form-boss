@@ -4,3 +4,6 @@ out/
 models/
 *.egg-info/
 data/mendeley/
+data/raw/
+*.MOV
+*.mov

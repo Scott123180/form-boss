@@ -172,6 +172,14 @@ def joint_angle(t: PoseTrack, g: Geometry, a: str, b: str, c: str, side: int, pl
     return _angle(x[:, JOINTS[a][side]], x[:, JOINTS[b][side]], x[:, JOINTS[c][side]])
 
 
+def image_angle(t: PoseTrack, a: str, b: str, c: str, side: int) -> np.ndarray:
+    """Angle at joint `b` as it appears in the image, whatever the view. Only trustworthy for
+    telling straight from bent: a straight limb looks straight from any angle, a bent one does not
+    look as bent as it is unless it bends in the image plane."""
+    x = t.image
+    return _angle(x[:, JOINTS[a][side]], x[:, JOINTS[b][side]], x[:, JOINTS[c][side]])
+
+
 def elbow_angle(t: PoseTrack, g: Geometry, side: int, plane: str) -> np.ndarray:
     """180 = straight arm."""
     return joint_angle(t, g, "shoulder", "elbow", "wrist", side, plane)

@@ -30,9 +30,9 @@ def check(t: PoseTrack, g: Geometry, lift: Lift) -> list[SetupFinding]:
         out.append(SetupFinding(
             "view angle", ok,
             f"camera is about {90 - yaw:.0f} deg off a true side view",
-            "" if ok else "Put the camera level with your hips, pointing straight at your side "
-            "(perpendicular to the direction you face). Measurements along the direction you face "
-            "are unreliable until then.",
+            "" if ok else (lift.camera or "Put the camera level with your hips, pointing straight "
+            "at your side (perpendicular to the direction you face).") + " Measurements along the "
+            "direction you face are unreliable until then.",
         ))
     else:
         out.append(SetupFinding(

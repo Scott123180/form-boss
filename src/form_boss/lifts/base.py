@@ -58,6 +58,7 @@ class Lift:
     joints: tuple[str, ...] = ("hip", "knee", "ankle")  # joints the checks depend on
     path: str = "bar"                                 # what the traced point is called
     path_point: str = "wrist"                         # joint whose left/right midpoint is traced
+    camera: str = ""                                  # lift-specific camera placement advice
 
 
 def tempo_finding(m: Metrics, first: str, second: str, min_lowering_s: float) -> Finding:

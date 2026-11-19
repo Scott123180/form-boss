@@ -7,8 +7,22 @@ Third-party clips used as test input. Not original work; keep attribution if red
 | `squat_oblique_demo.webm` | https://commons.wikimedia.org/wiki/File:Barbell_back_squat_exercise_demonstration.webm | Your Move (https://ymove.app/exercise-api) | CC BY-SA 4.0 |
 | `squat_rear_oblique_demo.webm` | https://commons.wikimedia.org/wiki/File:Squat_-_exercise_demonstration_video.webm | see Commons page | CC BY 3.0 |
 
-Note (2026-11-15): the first file was in the Commons category "Deletion requests November 2026",
-so its licence claim is under review there. Fine for local testing; check before publishing it.
+| `bench_side_demo.webm` | https://commons.wikimedia.org/wiki/File:Bench_press_-_exercise_demonstration_video.webm | FitnessScape | CC BY 3.0 |
+| `bench_ymove_demo.webm` | https://commons.wikimedia.org/wiki/File:Barbell_bench_press_exercise_demonstration.webm | Your Move (https://ymove.app/exercise-api) | CC BY-SA 4.0 |
+| `deadlift_side_demo.webm` | https://commons.wikimedia.org/wiki/File:Deadlift_-_exercise_demonstration_video.webm | FitnessScape | CC BY 3.0 |
+| `deadlift_pesomuerto.webm` | https://commons.wikimedia.org/wiki/File:PesoMuerto.webm | Commons user Mariabeato4 | CC BY-SA 3.0 |
+| `deadlift_sumo.webm` | https://commons.wikimedia.org/wiki/File:Peso_Muerto_sumo.webm | Commons user Martars022 | CC BY-SA 3.0 |
+
+Note (2026-11-15): the two Your Move files are in the Commons category "Deletion requests November
+2026", so their licence claims are under review there. Fine for local testing; check before publishing.
+
+What the bench and deadlift clips show (2026-11-16): none is a true side view filmed with a still
+camera, so they show the code runs and counts reps but do not test the thresholds.
+`bench_side_demo` is filmed from about 40 deg off side-on, toward the feet. `bench_ymove_demo` is
+filmed from the foot end, which counts as a front view. `deadlift_side_demo` is a rear oblique.
+`deadlift_pesomuerto` and `deadlift_sumo` are 3D renders whose camera moves during the clip.
+Two thresholds were changed after looking at these clips, both to stop false warnings: bench
+lockout is now measured just outside the rep, and the bar-level warning starts at 8 deg instead of 5.
 
 # Labelled evaluation clips (not stored in git)
 
