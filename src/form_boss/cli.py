@@ -10,7 +10,7 @@ from pathlib import Path
 
 from . import geometry, overlay, pose, reps as reps_mod, setup_check, viewer
 from .lifts import LIFTS
-from .lifts.base import Finding, RepReport
+from .lifts.base import Finding, Lift, RepReport
 
 MARK = {"good": "ok  ", "warn": "WARN", "fault": "FAULT", "info": "    "}
 
@@ -23,7 +23,8 @@ def analyze(video: Path, lift_name: str, out_dir: Path, burn_in: bool = False,
     g = geometry.compute(track)
     setup = setup_check.check(track, g, lift)
     sig = lift.signals(track, g)
-    reps = reps_mod.segment(sig[lift.rep_signal], track.fps, lift.min_dip, lift.near)
+    reps, ignored = reps_mod.segment(sig[lift.rep_signal], track.fps, lift.min_dip, lift.near,
+                                     lift.min_rep_s, lift.min_phase_s, lift.min_depth_frac)
     tracked = [r for r in reps if track.found[r.start:r.end + 1].mean() >= 0.85]
     skipped = len(reps) - len(tracked)
     reps = tracked
@@ -59,6 +60,7 @@ def analyze(video: Path, lift_name: str, out_dir: Path, burn_in: bool = False,
         "phases": list(lift.phases),
         "measurement_mode": g.mode,
         "reps_skipped": skipped,
+        "ignored": [_ignored(i, lift, track.fps) for i in ignored],
         "setup": [asdict(s) for s in setup],
         "reps": [asdict(r) for r in reports],
     }
@@ -71,6 +73,15 @@ def analyze(video: Path, lift_name: str, out_dir: Path, burn_in: bool = False,
     return result
 
 
+def _ignored(i: reps_mod.Ignored, lift: Lift, fps: float) -> dict:
+    if i.kind == "shallow":
+        reason = f"too shallow for a rep: {i.value:.0%} as deep as your typical rep"
+    else:
+        part = "the whole movement" if i.part < 0 else f"the {lift.phases[i.part]}"
+        reason = f"too quick for a rep: {part} took {i.value:.1f}s"
+    return {"start_s": i.rep.start / fps, "end_s": i.rep.end / fps, "kind": i.kind, "reason": reason}
+
+
 def print_report(res: dict) -> None:
     print(f"\n{res['lift'].upper()}  {res['video']}")
     print("\nCamera setup")
@@ -81,6 +92,10 @@ def print_report(res: dict) -> None:
     p = res["proportions"]
     print(f"\nProportions (estimated): femur {p['femur_cm']:.0f} cm, torso {p['torso_cm']:.0f} cm, "
           f"femur/torso {p['femur_to_torso']:.2f}")
+    if res["ignored"]:
+        print(f"\nIgnored {len(res['ignored'])} movement(s) that look like setup, not reps:")
+        for i in res["ignored"]:
+            print(f"  {i['start_s']:.1f}-{i['end_s']:.1f}s: {i['reason']}")
     if not res["reps"]:
         print("\nNo reps detected.")
     for r in res["reps"]:

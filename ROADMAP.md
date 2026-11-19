@@ -12,15 +12,20 @@ Enable anyone with a smartphone in a real gym to record a set from any reasonabl
 ## Phase 1: Real-World Rep Segmentation & Robustness (Immediate Priority)
 *Observed gap: Unracking, racking, and floor setup create 0.2s–0.4s "ghost reps" with severe false depth/hinge faults.*
 
-- [ ] **Minimum Rep Duration Filter (`src/form_boss/reps.py`)**
-  - Enforce minimum total rep duration (e.g., $\ge 1.0\text{s}$) and minimum phase duration (descent $\ge 0.4\text{s}$, ascent $\ge 0.4\text{s}$).
-  - Reject micro-dips from putting down or picking up the barbell.
+- [x] **Minimum Rep Duration Filter (`src/form_boss/reps.py`)** — done 2026-11-18
+  - Per-lift `min_rep_s` / `min_phase_s` on `Lift`. Too-quick dips are reported as "ignored" (CLI, `report.json`, result page) instead of being dropped silently, and are removed before the remaining reps are re-measured so they no longer split a real rep.
+  - Squat and bench: rep $\ge 0.6\text{s}$, each half $\ge 0.25\text{s}$. On the three user side-view squat clips this removes 13 setup movements (walk-in, ducking under the bar, walkout, racking) and keeps every working rep. The 1.0 s / 0.4 s first proposed would also drop real fast bodyweight squats in the Mendeley set (≈15%), and the "fast drop" tempo warning depends on keeping those.
+  - Off for rows, deadlifts and the bodyweight/dumbbell lifts: real explosive barbell rows in `row_side_30fps_01` take ~0.5 s, and a deadlift dropped from lockout is lowered in ~0.3 s.
+  - Slow setup movements (ducking under/out of the bar, walking the bar out) are left to **Outlier Dip Rejection** below.
 - [ ] **Active Set State Machine**
   - Implement a three-phase detector: `SETUP / UNRACK` $\rightarrow$ `WORKING SET` $\rightarrow$ `RACK / TEARDOWN`.
   - Only evaluate form findings on reps inside the `WORKING SET` window.
   - Detect lifter standing upright between sets for rows/deadlifts so resting posture is not flagged as a form fault.
-- [ ] **Outlier Dip Rejection**
-  - Measure median dip amplitude across the clip; reject candidate reps whose amplitude is $< 50\%$ of the median (e.g., small knee flexes while adjusting stance).
+- [x] **Outlier Dip Rejection** — done 2026-11-18
+  - Per-lift `min_depth_frac` on `Lift`; on for squat and bench at 0.6. Dips shallower than that share of the clip's typical rep are reported as ignored ("too shallow for a rep").
+  - The reference is the 75th percentile of the dips left after the duration filter, not the median: with 5 working reps and 2–3 half-depth setup dips the median is pulled down far enough that a 50%-of-median rule caught none of them.
+  - Result on the three user side-view squat clips: exactly the 5 working reps each; the setup dips were 42–53% as deep. In the Mendeley squat clips the dips it removes are tracking errors (one-frame jumps under the face-blur box), not shallow reps.
+  - Limits: a clip with a single dip has nothing to compare against, and a deliberately shallow rep in an otherwise deep set (below 60%) is listed as ignored rather than flagged for depth.
 
 ---
 

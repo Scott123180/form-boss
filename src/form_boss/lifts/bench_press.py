@@ -141,6 +141,10 @@ LIFT = Lift(
            Series("bar_along", "Bar toward hips", "%")],
     phases=("lowering", "chest", "pressing"),
     min_dip=35.0,
+    # Unracking and racking bend the elbows quickly or only part way; same limits as the squat.
+    min_rep_s=0.6,
+    min_phase_s=0.25,
+    min_depth_frac=0.6,
     joints=("shoulder", "elbow", "wrist", "hip"),
     camera="Put the camera at bench height, square to your side and a step toward your feet so the "
            "near plate does not cover your shoulder, with the whole bench in frame.",

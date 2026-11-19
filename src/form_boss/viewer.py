@@ -54,6 +54,7 @@ def build(video: Path, out_dir: Path, t: PoseTrack, lift: Lift, sig: Signals, re
                     "tag": list(geometry.JOINTS[s.tag]) if s.tag else None} for s in lift.chart],
         "phases": result["phases"],
         "reps": result["reps"],
+        "ignored": result["ignored"],
         "setup": result["setup"],
         "proportions": result["proportions"],
     }

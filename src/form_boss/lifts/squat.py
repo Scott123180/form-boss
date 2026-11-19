@@ -106,4 +106,11 @@ LIFT = Lift(
     checks=[depth, hips_shoot_up, torso_lean, bar_over_midfoot, tempo],
     chart=[Series("knee", "Knee", tag="knee"), Series("torso_lean", "Torso lean", tag="hip"),
            Series("thigh", "Thigh above horizontal")],
+    # Unracking, racking and stepping under the bar bend the knees as far as a rep but take ~0.2 s each
+    # way. The quickest real reps in the Mendeley clips take ~0.3 s each way, timed the same way.
+    min_rep_s=0.6,
+    min_phase_s=0.25,
+    # Ducking under the bar and walking it out are slow but bend the knees ~40-45 deg against ~90 for
+    # a working rep on the user clips. Dips this shallow in the Mendeley clips are tracking errors.
+    min_depth_frac=0.6,
 )

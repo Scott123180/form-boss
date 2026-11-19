@@ -87,6 +87,9 @@ ul.find .fix { color: var(--text-2); display: block; margin-top: 2px; }
 .rep-head .meta { color: var(--text-3); font-size: 12px; }
 .rep-head .btns { margin-left: auto; display: flex; gap: 6px; }
 .rep-head button { padding: 2px 8px; font-size: 12px; }
+.ignored { color: var(--text-2); font-size: 13px; }
+.ignored ul { margin: 6px 0 0; padding-left: 18px; }
+.ignored button { padding: 0 6px; font-size: 12px; margin-right: 6px; }
 .props { color: var(--text-2); }
 details { margin-top: 16px; padding: 10px 14px; }
 details summary { cursor: pointer; color: var(--text-2); }
@@ -185,6 +188,9 @@ $("reps").innerHTML = reps.length ? reps.map((r, i) => `<div class="rep" data-i=
   <ul class="find">${r.findings.map(f => `<li><span class="ic ${f.status}" title="${LABEL[f.status]}">${ICON[f.status]}</span>
     <span><b>${esc(f.check)}:</b> ${esc(f.message)}</span></li>`).join("")}</ul></div>`).join("")
   : "<p>No reps detected in this clip.</p>";
+if (D.ignored.length) $("reps").insertAdjacentHTML("beforeend", `<details class="ignored">
+  <summary>${D.ignored.length} movement${D.ignored.length === 1 ? "" : "s"} ignored as setup, not reps</summary>
+  <ul>${D.ignored.map(g => `<li><button data-t="${g.start_s}">${g.start_s.toFixed(1)}s</button>${esc(g.reason)}</li>`).join("")}</ul></details>`);
 
 const mKeys = reps.length ? Object.keys(reps[0].metrics) : [];
 $("table").innerHTML = `<table><tr><th>Measurement</th>${reps.map(r => `<th>Rep ${r.number}</th>`).join("")}</tr>` +
@@ -326,6 +332,7 @@ document.addEventListener("keydown", ev => {
   if (ev.code === "ArrowRight") { ev.preventDefault(); v.pause(); seek(frame + 1); }
 });
 $("reps").addEventListener("click", ev => {
+  if (ev.target.dataset.t) { v.pause(); selected = null; seek(Math.round(+ev.target.dataset.t * fps)); return; }
   const card = ev.target.closest(".rep"); if (!card) return;
   const i = +card.dataset.i, act = ev.target.dataset.act || "play";
   if (act === "bottom") { v.pause(); selected = null; seek(reps[i].b); }

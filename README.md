@@ -38,6 +38,12 @@ Pipeline: pose tracking (`pose.py`) -> body geometry (`geometry.py`) -> rep
 segmentation (`reps.py`) -> lift-specific signals, metrics and checks (`lifts/`) ->
 result page (`viewer.py`, `viewer.html`).
 
+For the squat and bench press, dips that are too quick to be a rep (about 0.2 s down or up:
+unracking, racking) or much shallower than the clip's other reps (ducking under the bar, walking it
+out) are listed as ignored setup movements instead of reps.
+
+    uv run pytest          # unit tests
+
 A new lift is a module in `lifts/` registered in `lifts/__init__.py`. It supplies per-frame
 signals, names the one that dips once per rep, turns each rep into measurements, and lists the
 checks that turn measurements into findings (see `lifts/base.py`).

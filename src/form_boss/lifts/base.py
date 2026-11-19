@@ -55,6 +55,14 @@ class Lift:
     phases: tuple[str, str, str] = ("descent", "bottom", "ascent")  # before / at / after the turnaround
     min_dip: float = 35.0                             # see reps.segment
     near: float = 12.0
+    # Dips quicker than this are setup movements (unracking, stepping under the bar), not reps; see
+    # reps.segment. Off by default: without a bar to pick up there is little to confuse with a rep,
+    # and a fast bodyweight rep can genuinely take half a second.
+    min_rep_s: float = 0.0
+    min_phase_s: float = 0.0
+    # Dips shallower than this share of the clip's typical rep are setup too (ducking under the bar,
+    # walking it out). Off by default: it needs reps of a steady depth to compare against.
+    min_depth_frac: float = 0.0
     joints: tuple[str, ...] = ("hip", "knee", "ankle")  # joints the checks depend on
     path: str = "bar"                                 # what the traced point is called
     path_point: str = "wrist"                         # joint whose left/right midpoint is traced
