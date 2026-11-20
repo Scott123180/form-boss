@@ -26,7 +26,12 @@ def check(t: PoseTrack, g: Geometry, lift: Lift) -> list[SetupFinding]:
     # View angle
     yaw = g.view_yaw
     ok = g.view == lift.view
-    if lift.view == "side":
+    if not ok and g.view in lift.also_views:
+        out.append(SetupFinding(
+            "view angle", True, f"filmed from the {'front or back' if g.view == 'front' else g.view} "
+            f"(about {yaw:.0f} deg off straight-on): the checks for this view are judged; film from "
+            f"the {lift.view} for the rest"))
+    elif lift.view == "side":
         out.append(SetupFinding(
             "view angle", ok,
             f"camera is about {90 - yaw:.0f} deg off a true side view",
@@ -40,6 +45,25 @@ def check(t: PoseTrack, g: Geometry, lift: Lift) -> list[SetupFinding]:
             "" if ok else "Put the camera directly in front of you at chest height. Side-to-side "
             "measurements are unreliable until then.",
         ))
+
+    # Camera tilt: rolled sideways (measurements are corrected for it) or looking up from the floor.
+    # Pitch is the pose model's estimate and reads low, so a modest reading already means a lot.
+    if g.camera_pitch > 8 or g.camera_pitch < -15 or abs(g.camera_roll) >= 3:
+        parts, fix = [], []
+        if g.camera_pitch > 8:
+            parts.append("looking up at you from low down")
+            fix.append("Raise the camera to hip height and point it level. From the floor, equipment "
+                       "between you and the camera (a rack's safety bars, plates) hides the hips at "
+                       "the bottom, and the tracker guesses them too high.")
+        elif g.camera_pitch < -15:
+            parts.append("looking down at you from above")
+            fix.append("Lower the camera to hip height and point it level.")
+        if abs(g.camera_roll) >= 3:
+            parts.append(f"tilted {abs(g.camera_roll):.0f} deg sideways (measurements are corrected for this)")
+            fix.append("Stand the phone square to the floor.")
+        out.append(SetupFinding("camera tilt", False, "camera is " + " and ".join(parts), " ".join(fix)))
+    elif g.corrected or g.camera_pitch:
+        out.append(SetupFinding("camera tilt", True, "camera is about level"))
 
     # Whole body in frame
     pts = t.image[:, [P.NOSE, P.L_HEEL, P.R_HEEL, P.L_TOE, P.R_TOE, P.L_WRIST, P.R_WRIST]]
@@ -85,8 +109,17 @@ def check(t: PoseTrack, g: Geometry, lift: Lift) -> list[SetupFinding]:
         "" if det > 0.9 else "The tracker kept losing you. Improve lighting, wear clothes that contrast "
         "with the background, keep your head visible and keep other people out of the frame.",
     ))
+    src = t.source_fps or t.fps
     out.append(SetupFinding(
-        "frame rate", t.fps >= 24, f"{t.fps:.0f} fps",
-        "" if t.fps >= 24 else "Record at 30 fps or higher.",
+        "frame rate", src >= 24, f"{src:.0f} fps" + (f", analysed at {t.fps:.0f}" if t.stride > 1 else ""),
+        "" if src >= 24 else "Record at 30 fps or higher.",
     ))
+    if t.others / max(1, len(t)) > 0.02:
+        share = t.others / len(t)
+        out.append(SetupFinding(
+            "other people", share < 0.1, f"the tracker followed someone else for {share:.0%} of the clip; "
+            "those frames were set aside",
+            "" if share < 0.1 else "Film where nobody walks between you and the camera, or stand closer "
+            "to it than anyone else in the picture.",
+        ))
     return out

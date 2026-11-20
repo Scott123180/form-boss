@@ -161,8 +161,10 @@ let frame = 0, selected = null;
 const liftName = D.lift.replace(/_/g, " ");
 const cap = w => w[0].toUpperCase() + w.slice(1);
 const SER = D.series.map((sr, i) => ({ ...sr, col: `--s${i + 1}` }));
-const fmt = (sr, f) => sr.values[f].toFixed(0) + sr.unit;
-$("title").textContent = liftName + " analysis";
+const fmt = (sr, f) => sr.values[f].toFixed(sr.unit === "x" ? 2 : 0) + sr.unit;
+const style = D.variation ? ` (${D.variation.replace(/_/g, "-")})` : "";
+$("title").textContent = liftName + style + " analysis";
+if (D.detected) $("title").title = `Lift worked out from the movement: ${D.detected}`;
 $("pathName").textContent = cap(D.pathName) + " path";
 $("legend").innerHTML = SER.map(sr => `<span><i style="background:var(${sr.col})"></i>${esc(sr.label)}${sr.unit === "°" ? "" : ` (${esc(sr.unit)})`}</span>`).join("");
 $("now").innerHTML = SER.map((sr, i) => `<div><b id="n${i}"></b><span><i style="background:var(${sr.col})"></i>${esc(sr.label.toLowerCase())}</span></div>`).join("");
@@ -170,8 +172,11 @@ $("file").textContent = D.name;
 document.title = `${liftName} – ${D.name}`;
 const count = st => reps.reduce((a, r) => a + r.findings.filter(f => f.status === st).length, 0);
 const setupBad = D.setup.filter(s => !s.ok).length;
-$("summary").textContent = [`${reps.length} rep${reps.length === 1 ? "" : "s"}`, `${count("fault")} faults`,
-  `${count("warn")} warnings`, `${setupBad} camera setup issue${setupBad === 1 ? "" : "s"}`].join(" · ");
+$("summary").textContent = [`${reps.length} rep${reps.length === 1 ? "" : "s"}` +
+  (D.sets.length > 1 ? ` in ${D.sets.length} sets` : ""), `${count("fault")} faults`,
+  `${count("warn")} warnings`, `${setupBad} camera setup issue${setupBad === 1 ? "" : "s"}`,
+  ...(D.detected ? ["lift detected automatically"] : []),
+  ...(D.strictness !== "normal" ? [`${D.strictness} grading`] : [])].join(" · ");
 
 $("setup").innerHTML = D.setup.map(s => `<li><span class="ic ${s.ok ? "good" : "warn"}"
   title="${s.ok ? "OK" : "Needs fixing"}">${s.ok ? ICON.good : ICON.warn}</span>
@@ -181,20 +186,42 @@ const p = D.proportions;
 $("props").textContent = `Femur ${p.femur_cm.toFixed(0)} cm, shin ${p.tibia_cm.toFixed(0)} cm, torso ` +
   `${p.torso_cm.toFixed(0)} cm. Femur-to-torso ratio ${p.femur_to_torso.toFixed(2)}.`;
 
+// Checks this camera view cannot judge are listed once, not under every rep.
+const viewSkip = f => f.status === "info" && f.message.startsWith("Not assessed: needs a");
+const VIEWNAME = { side: "true side", front: "front or rear" };
+const skipped = {};
+if (reps.length) reps[0].findings.forEach(f => {
+  if (reps.every(r => r.findings.some(g => g.check === f.check && viewSkip(g))))
+    (skipped[f.needs_view] = skipped[f.needs_view] || []).push(f.check);
+});
+reps.forEach(r => r.shown = r.findings.filter(f => !(viewSkip(f) && (skipped[f.needs_view] || []).includes(f.check))));
 $("reps").innerHTML = reps.length ? reps.map((r, i) => `<div class="rep" data-i="${i}">
   <div class="rep-head"><strong>Rep ${r.number}</strong>
     <span class="meta">${r.start_s.toFixed(1)}–${r.end_s.toFixed(1)}s${r.partial ? " · partial" : ""}</span>
     <span class="btns"><button data-act="play">Play</button><button data-act="bottom">${esc(cap(D.phases[1]))}</button></span></div>
-  <ul class="find">${r.findings.map(f => `<li><span class="ic ${f.status}" title="${LABEL[f.status]}">${ICON[f.status]}</span>
+  <ul class="find">${r.shown.map(f => `<li><span class="ic ${f.status}" title="${LABEL[f.status]}">${ICON[f.status]}</span>
     <span><b>${esc(f.check)}:</b> ${esc(f.message)}</span></li>`).join("")}</ul></div>`).join("")
   : "<p>No reps detected in this clip.</p>";
+const skipText = Object.entries(skipped).map(([v, cs]) => `${cs.join(", ")} (need a ${VIEWNAME[v] || v} view)`);
+if (skipText.length) $("reps").insertAdjacentHTML("afterbegin",
+  `<p class="ignored">Not assessed from this camera view: ${esc(skipText.join("; "))}.</p>`);
+if (D.sets.length > 1) $("reps").insertAdjacentHTML("afterbegin", `<p class="ignored">${D.sets.map(s =>
+  `Set ${s.number}: reps ${s.reps[0]}–${s.reps[s.reps.length - 1]}, ${s.start_s.toFixed(1)}–${s.end_s.toFixed(1)}s`).join("<br>")}</p>`);
 if (D.ignored.length) $("reps").insertAdjacentHTML("beforeend", `<details class="ignored">
-  <summary>${D.ignored.length} movement${D.ignored.length === 1 ? "" : "s"} ignored as setup, not reps</summary>
+  <summary>${D.ignored.length} movement${D.ignored.length === 1 ? "" : "s"} not counted as working reps</summary>
   <ul>${D.ignored.map(g => `<li><button data-t="${g.start_s}">${g.start_s.toFixed(1)}s</button>${esc(g.reason)}</li>`).join("")}</ul></details>`);
 
 const mKeys = reps.length ? Object.keys(reps[0].metrics) : [];
 $("table").innerHTML = `<table><tr><th>Measurement</th>${reps.map(r => `<th>Rep ${r.number}</th>`).join("")}</tr>` +
   mKeys.map(k => `<tr><td>${esc(k.replace(/_/g, " "))}</td>${reps.map(r => `<td>${r.metrics[k].toFixed(1)}</td>`).join("")}</tr>`).join("") + "</table>";
+
+// Where in the session a moment falls: setup, a working set, rest between sets, teardown.
+function phaseAt(t) {
+  const ph = D.timeline.find(x => t >= x.start_s && t <= x.end_s);
+  if (!ph) return "Between reps";
+  if (ph.phase === "working set") return D.sets.length > 1 ? `Set ${ph.set}, between reps` : "Between reps";
+  return { setup: "Setup, before the set", rest: "Resting between sets", teardown: "After the set" }[ph.phase];
+}
 
 // ---------- overlay drawing ----------
 function repAt(f) { return reps.findIndex(r => f >= r.s && f <= r.e); }
@@ -242,8 +269,10 @@ let cx = null, playhead = null, cross = null;
 function buildChart() {
   const el = $("chart"), W = el.clientWidth, H = 220, m = { l: 34, r: 108, t: 20, b: 22 };
   const all = SER.flatMap(sr => sr.values);
-  const lo = Math.min(0, Math.floor(Math.min(...all) / 15) * 15), hi = Math.max(90, Math.ceil(Math.max(...all) / 45) * 45);
-  const X = f => m.l + f / (N - 1) * (W - m.l - m.r), Y = val => m.t + (hi - val) / (hi - lo) * (H - m.t - m.b);
+  // Scale to the 0.5-99.5th percentile so a few tracking spikes do not flatten the chart.
+  const srt = Float64Array.from(all).sort(), q = p => srt[Math.min(srt.length - 1, Math.floor(p * srt.length))];
+  const lo = Math.min(0, Math.floor(q(0.005) / 15) * 15), hi = Math.max(90, Math.ceil(q(0.995) / 45) * 45);
+  const X = f => m.l + f / (N - 1) * (W - m.l - m.r), Y = val => m.t + (hi - Math.max(lo, Math.min(hi, val))) / (hi - lo) * (H - m.t - m.b);
   cx = { X, W, m, inv: px => Math.max(0, Math.min(N - 1, Math.round((px - m.l) / (W - m.l - m.r) * (N - 1)))) };
   let s = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(SER.map(sr => sr.label).join(", "))} over time">`;
   reps.forEach(r => {
@@ -299,7 +328,7 @@ function render(f) {
   SER.forEach((sr, i) => $("n" + i).textContent = fmt(sr, frame));
   $("time").textContent = `${(frame / fps).toFixed(2)}s · frame ${frame}/${N - 1}`;
   const ri = repAt(frame);
-  $("phase").textContent = ri < 0 ? "Between reps"
+  $("phase").textContent = ri < 0 ? phaseAt(frame / fps)
     : `Rep ${reps[ri].number}: ${D.phases[frame < reps[ri].b ? 0 : frame === reps[ri].b ? 1 : 2]}`;
   document.querySelectorAll(".rep").forEach((el, i) => el.classList.toggle("active", i === ri));
 }

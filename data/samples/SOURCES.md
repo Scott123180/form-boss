@@ -72,3 +72,31 @@ pairs come out "same", partly because many "good" clips have real faults (fast, 
 partly from tracking noise. Weakest are the row (the blur box covers the bent-over upper body) and
 the two estimates made without a direct view: forward fold in a side bend seen from the front, and
 bottom range in a triceps extension seen from the front.
+
+## Results (2026-11-19)
+
+Same comparison after the working-set state machine, camera tilt correction, front/rear checks and
+lift picking (see ROADMAP.md). Tracking is the cached tracking from before (`out/mendeley/.tracks`),
+except for the front-view squat and row clips, fetched and tracked for this run.
+
+| Lift | View | People | Check that separates best | Bad more / good more / same | Any check: bad / good / same |
+|---|---|---|---|---|---|
+| squat | side | 15 | tempo; depth | 6/0/9; 5/1/9 | 0/0/15 |
+| squat | front | 23 | hip shift; tempo | 8/2/13; 9/4/10 | 11/1/11 |
+| push_up | side | 17 | body line | 9/1/7 | 11/1/5 |
+| bicep_curl | side | 18 | top range; tempo | 9/1/8; 9/1/8 | 6/2/10 |
+| bent_over_row | side | 20 | torso movement | 7/3/10 | 6/4/10 |
+| bent_over_row | front | 22 | forearm line | 12/5/5 | 9/2/11 |
+| overhead_press | front | 24 | lockout; tempo | 11/3/10; 9/1/14 | 10/3/11 |
+| triceps_extension | front | 21 | elbow flare | 13/1/7 | 12/2/7 |
+| side_bend | front | 22 | range | 8/1/13 | 12/2/8 |
+
+Side-view lifts are within one person of the 2026-11-16 run. On the side-view squats the median
+bottom thigh angle now separates "good" from "bad" clips by 9.1 deg (was 5.0) after the camera
+tilt correction. Knee tracking (front squat) rarely fires: the "bad" clips are not specifically
+knee caves, and the threshold is set wide because perspective alone moves the reading by ~0.1.
+Pull symmetry (front row) does not separate the labels (5/5/12).
+
+Lift auto-detection on these clips: 374 of 414 (90%). Push-ups 42/42, curls 36/40, overhead press
+48/50, side bends 43/46, triceps 47/50, squats 81/92, rows 77/94 (front-view rows are often read
+as curls).

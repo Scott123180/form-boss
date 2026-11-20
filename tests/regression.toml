@@ -1,0 +1,77 @@
+# Clips the regression runner (scripts/regress.py) analyses, and what a correct analysis of each
+# must show. `reps` is the number of working reps a person counts by watching the clip; leave it
+# out where nobody has counted. Everything else the runner compares against the saved baseline
+# (tests/regression_baseline.json) so that changes in findings show up as a diff.
+#
+# data/user clips are not in git (see data/user/README.md); missing clips are skipped.
+
+[[clip]]
+path = "data/user/squat/squat_side_30fps.MOV"
+lift = "squat"
+reps = 5
+
+[[clip]]
+path = "data/user/squat/squat_side_120fps_01.MOV"
+lift = "squat"
+reps = 5
+
+[[clip]]
+path = "data/user/squat/squat_side_120fps_02.MOV"
+lift = "squat"
+reps = 5
+
+[[clip]]
+path = "data/user/squat/squat_front_30fps.MOV"
+lift = "squat"
+reps = 5
+
+[[clip]]
+path = "data/user/squat/squat_rear_30fps.MOV"
+lift = "squat"
+reps = 5
+
+# Explosive rows with the bar reset on the floor; the near plate hides the arm at the top, so some
+# reps are counted twice. No count until that is fixed.
+[[clip]]
+path = "data/user/bent_over_row/row_side_30fps_01.MOV"
+lift = "bent_over_row"
+
+[[clip]]
+path = "data/user/bent_over_row/row_side_30fps_02.MOV"
+lift = "bent_over_row"
+
+[[clip]]
+path = "data/user/bent_over_row/row_oblique_30fps.MOV"
+lift = "bent_over_row"
+
+[[clip]]
+path = "data/user/bent_over_row/row_front_30fps.MOV"
+lift = "bent_over_row"
+
+[[clip]]
+path = "data/samples/squat_oblique_demo.webm"
+lift = "squat"
+
+[[clip]]
+path = "data/samples/squat_rear_oblique_demo.webm"
+lift = "squat"
+
+[[clip]]
+path = "data/samples/bench_side_demo.webm"
+lift = "bench_press"
+
+[[clip]]
+path = "data/samples/bench_ymove_demo.webm"
+lift = "bench_press"
+
+[[clip]]
+path = "data/samples/deadlift_side_demo.webm"
+lift = "deadlift"
+
+[[clip]]
+path = "data/samples/deadlift_pesomuerto.webm"
+lift = "deadlift"
+
+[[clip]]
+path = "data/samples/deadlift_sumo.webm"
+lift = "deadlift"

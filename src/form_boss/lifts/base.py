@@ -7,6 +7,7 @@ from typing import Callable
 
 import numpy as np
 
+from ..errors import ConfigError
 from ..geometry import Geometry
 from ..pose import PoseTrack
 from ..reps import Rep
@@ -43,6 +44,25 @@ class Series:
     tag: str = ""   # joint to pin a live label to in the video: shoulder|elbow|wrist|hip|knee
 
 
+# How far a measurement may stray from the ideal before it is flagged, relative to the defaults.
+STRICTNESS = {"lenient": 1.3, "normal": 1.0, "strict": 0.75}
+
+
+@dataclass
+class Profile:
+    """User settings the checks take into account."""
+    strictness: str = "normal"   # a key of STRICTNESS
+    variation: str = ""          # a key of the lift's `variations`; "" = the lift's first one
+
+    def tol(self, x: float) -> float:
+        """Scale an allowed deviation (degrees, cm, % past the ideal) by the strictness."""
+        return x * STRICTNESS[self.strictness]
+
+    def limit(self, ideal: float, allowed: float) -> float:
+        """A threshold `allowed` away from `ideal`, with the gap scaled by the strictness."""
+        return ideal + self.tol(allowed - ideal)
+
+
 @dataclass
 class Lift:
     name: str
@@ -67,6 +87,30 @@ class Lift:
     path: str = "bar"                                 # what the traced point is called
     path_point: str = "wrist"                         # joint whose left/right midpoint is traced
     camera: str = ""                                  # lift-specific camera placement advice
+    # Named styles of the lift that change what good form looks like, e.g. low-bar vs high-bar
+    # squat: {name: description}. The first is the default.
+    variations: dict[str, str] = field(default_factory=dict)
+    # Optional per-frame value that is high in the lift's working position (e.g. torso lean for a
+    # row). Reps done well outside it are the lifter standing up between sets; see sets.find_sets.
+    posture: Callable[[Signals, Geometry], np.ndarray] | None = None
+    # Feet stay put through every rep, so a dip while a foot moves is walking, not a rep. Off where
+    # the feet are often hidden (under a bench) and their landmarks are guesses.
+    planted_feet: bool = True
+    # Other views the lift has checks for, e.g. ("front",) when knee tracking is judged from the front.
+    also_views: tuple[str, ...] = ()
+    # Chart for a front or rear view, when that view measures different things; up to three.
+    front_chart: list[Series] = field(default_factory=list)
+
+    def charts(self, view: str) -> list[Series]:
+        return self.front_chart if view == "front" and self.front_chart else self.chart
+
+    def profile(self, strictness: str = "normal", variation: str = "") -> Profile:
+        if strictness not in STRICTNESS:
+            raise ConfigError(f"strictness must be one of {', '.join(STRICTNESS)}")
+        if variation and variation not in self.variations:
+            known = ", ".join(self.variations) or "none"
+            raise ConfigError(f"{self.name} has no variation {variation!r} (known: {known})")
+        return Profile(strictness, variation or next(iter(self.variations), ""))
 
 
 def tempo_finding(m: Metrics, first: str, second: str, min_lowering_s: float) -> Finding:

@@ -12,7 +12,7 @@ from .. import geometry as G
 from ..geometry import Geometry
 from ..pose import PoseTrack
 from ..reps import Rep
-from .base import Finding, Lift, Metrics, Series, Signals, tempo_finding
+from .base import Finding, Lift, Metrics, Profile, Series, Signals, tempo_finding
 
 
 def signals(t: PoseTrack, g: Geometry) -> Signals:
@@ -45,36 +45,36 @@ def metrics(sig: Signals, g: Geometry, r: Rep, fps: float) -> Metrics:
     }
 
 
-def bend_range(m: Metrics, g: Geometry) -> Finding:
+def bend_range(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a = m["side_lean_max"]
-    if a >= 20:
+    if a >= p.limit(35, 20):
         return Finding("range", "good", f"Bent {a:.0f} deg to the side.", needs_view="front")
     return Finding("range", "warn", f"Shallow bend ({a:.0f} deg). Slide the weight down toward the "
                    "knee, then stand tall again.", needs_view="front")
 
 
-def stays_sideways(m: Metrics, g: Geometry) -> Finding:
+def stays_sideways(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a = m["forward_lean_max"]
     cue = ("which takes the load off the obliques and puts it on the lower back. Imagine bending "
            "between two panes of glass.")
     if g.view == "side":   # measured directly
-        if a < 20:
+        if a < p.tol(20):
             return Finding("forward fold", "good", "Bend stays side to side.")
-        return Finding("forward fold", "warn" if a < 35 else "fault", f"Folding {a:.0f} deg forward, {cue}")
-    if a < 45:             # estimated, so only a large fold is called out
+        return Finding("forward fold", "warn" if a < p.tol(35) else "fault", f"Folding {a:.0f} deg forward, {cue}")
+    if a < p.tol(45):             # estimated, so only a large fold is called out
         return Finding("forward fold", "info", "No large forward fold seen; a side view measures this properly.")
     return Finding("forward fold", "warn", f"Torso appears to fold roughly {a:.0f} deg forward, {cue}")
 
 
-def hips_over_feet(m: Metrics, g: Geometry) -> Finding:
+def hips_over_feet(m: Metrics, g: Geometry, p: Profile) -> Finding:
     s = m["hip_shift_pct_torso"]
-    if s < 20:
+    if s < p.tol(20):
         return Finding("hips", "good", "Hips stay over the feet.", needs_view="front")
     return Finding("hips", "warn", f"Hips push out sideways ({s:.0f}% of torso length). Keep the "
                    "hips still and bend from the waist.", needs_view="front")
 
 
-def tempo(m: Metrics, g: Geometry) -> Finding:
+def tempo(m: Metrics, g: Geometry, p: Profile) -> Finding:
     return tempo_finding(m, "leaning", "returning", 0.0)
 
 

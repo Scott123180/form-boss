@@ -1,0 +1,956 @@
+{
+ "data/user/squat/squat_side_30fps.MOV": {
+  "lift": "squat",
+  "view": "side",
+  "reps": 5,
+  "ignored": [
+   "6.6s quick",
+   "38.9s quick",
+   "40.3s shallow",
+   "94.6s quick"
+  ],
+  "sets": [
+   "69.4-92.2s"
+  ],
+  "findings": [
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "warn",
+    "hip/chest timing": "warn",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing"
+  ]
+ },
+ "data/user/squat/squat_side_120fps_01.MOV": {
+  "lift": "squat",
+  "view": "side",
+  "reps": 5,
+  "ignored": [
+   "5.8s quick",
+   "44.0s quick",
+   "45.3s quick",
+   "58.0s shallow",
+   "119.2s quick",
+   "120.8s shallow"
+  ],
+  "sets": [
+   "84.0-117.7s"
+  ],
+  "findings": [
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "warn",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing"
+  ]
+ },
+ "data/user/squat/squat_side_120fps_02.MOV": {
+  "lift": "squat",
+  "view": "side",
+  "reps": 5,
+  "ignored": [
+   "0.0s quick",
+   "5.1s quick",
+   "41.2s quick",
+   "42.9s quick",
+   "45.6s shallow",
+   "96.5s quick",
+   "99.4s shallow",
+   "102.3s quick"
+  ],
+  "sets": [
+   "71.9-96.0s"
+  ],
+  "findings": [
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "warn",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "warn",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "warn",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "fault",
+    "torso lean": "info",
+    "bar over midfoot": "warn",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "fault",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "good",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing"
+  ]
+ },
+ "data/user/squat/squat_front_30fps.MOV": {
+  "lift": "squat",
+  "view": "front",
+  "reps": 5,
+  "ignored": [
+   "7.4s quick",
+   "8.3s quick",
+   "9.2s quick",
+   "9.8s stepping",
+   "37.3s shallow",
+   "42.5s shallow",
+   "48.2s frame",
+   "55.7s frame",
+   "62.6s quick",
+   "66.6s shallow",
+   "99.9s frame",
+   "102.4s quick",
+   "103.1s frame"
+  ],
+  "sets": [
+   "74.8-98.2s"
+  ],
+  "findings": [
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "warn",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "warn",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "warn",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "warn",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "framing",
+   "joint visibility"
+  ]
+ },
+ "data/user/squat/squat_rear_30fps.MOV": {
+  "lift": "squat",
+  "view": "front",
+  "reps": 5,
+  "ignored": [
+   "9.8s shallow",
+   "11.9s shallow",
+   "14.7s shallow",
+   "27.6s posture",
+   "32.8s stepping",
+   "39.3s quick",
+   "43.2s stepping",
+   "48.3s shallow",
+   "53.3s shallow",
+   "56.7s shallow",
+   "62.0s shallow",
+   "66.5s shallow",
+   "100.3s stepping",
+   "102.6s stepping"
+  ],
+  "sets": [
+   "69.5-99.4s"
+  ],
+  "findings": [
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "warn",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "warn",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "good",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "warn",
+    "bar level": "good",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "skipped reps"
+  ]
+ },
+ "data/user/bent_over_row/row_side_30fps_01.MOV": {
+  "lift": "bent_over_row",
+  "view": "side",
+  "reps": 10,
+  "ignored": [
+   "7.9s posture",
+   "49.9s posture",
+   "54.1s posture"
+  ],
+  "sets": [
+   "30.1-53.5s"
+  ],
+  "findings": [
+   {
+    "hinge": "good",
+    "torso movement": "warn",
+    "pull height": "warn",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "warn",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "info"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "warn",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "good",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "warn",
+    "pull height": "good",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing",
+   "skipped reps",
+   "tracking"
+  ]
+ },
+ "data/user/bent_over_row/row_side_30fps_02.MOV": {
+  "lift": "bent_over_row",
+  "view": "side",
+  "reps": 7,
+  "ignored": [
+   "9.2s posture",
+   "42.3s posture"
+  ],
+  "sets": [
+   "33.0-58.1s"
+  ],
+  "findings": [
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "info"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "warn",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "warn",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing",
+   "skipped reps",
+   "tracking"
+  ]
+ },
+ "data/user/bent_over_row/row_oblique_30fps.MOV": {
+  "lift": "bent_over_row",
+  "view": "side",
+  "reps": 6,
+  "ignored": [
+   "0.0s frame",
+   "12.5s posture",
+   "14.0s posture",
+   "17.7s frame",
+   "19.6s frame",
+   "30.0s posture",
+   "31.9s posture",
+   "63.9s posture",
+   "64.2s frame",
+   "66.0s frame"
+  ],
+  "sets": [
+   "14.6-27.5s",
+   "42.9-44.6s"
+  ],
+  "findings": [
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "fault",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "info"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "good",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "good",
+    "torso movement": "warn",
+    "pull height": "fault",
+    "bottom range": "good",
+    "pull symmetry": "info",
+    "forearm line": "info",
+    "tempo": "warn"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "framing",
+   "joint visibility",
+   "other people",
+   "skipped reps",
+   "tracking"
+  ]
+ },
+ "data/user/bent_over_row/row_front_30fps.MOV": {
+  "lift": "bent_over_row",
+  "view": "front",
+  "reps": 5,
+  "ignored": [
+   "23.3s posture",
+   "38.5s posture"
+  ],
+  "sets": [
+   "48.3-70.1s"
+  ],
+  "findings": [
+   {
+    "hinge": "info",
+    "torso movement": "info",
+    "pull height": "info",
+    "bottom range": "good",
+    "pull symmetry": "good",
+    "forearm line": "good",
+    "tempo": "info"
+   },
+   {
+    "hinge": "info",
+    "torso movement": "info",
+    "pull height": "info",
+    "bottom range": "good",
+    "pull symmetry": "good",
+    "forearm line": "warn",
+    "tempo": "warn"
+   },
+   {
+    "hinge": "info",
+    "torso movement": "info",
+    "pull height": "info",
+    "bottom range": "good",
+    "pull symmetry": "good",
+    "forearm line": "good",
+    "tempo": "info"
+   },
+   {
+    "hinge": "info",
+    "torso movement": "info",
+    "pull height": "info",
+    "bottom range": "good",
+    "pull symmetry": "good",
+    "forearm line": "good",
+    "tempo": "info"
+   },
+   {
+    "hinge": "info",
+    "torso movement": "info",
+    "pull height": "info",
+    "bottom range": "good",
+    "pull symmetry": "good",
+    "forearm line": "good",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "joint visibility",
+   "skipped reps",
+   "tracking"
+  ]
+ },
+ "data/samples/squat_oblique_demo.webm": {
+  "lift": "squat",
+  "view": "oblique",
+  "reps": 4,
+  "ignored": [],
+  "sets": [
+   "0.4-13.5s"
+  ],
+  "findings": [
+   {
+    "depth": "info",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "good",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "info",
+    "hip shift": "info",
+    "bar level": "info",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "view angle"
+  ]
+ },
+ "data/samples/squat_rear_oblique_demo.webm": {
+  "lift": "squat",
+  "view": "front",
+  "reps": 2,
+  "ignored": [],
+  "sets": [
+   "1.3-6.4s"
+  ],
+  "findings": [
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "fault",
+    "bar level": "warn",
+    "tempo": "info"
+   },
+   {
+    "depth": "info",
+    "hip/chest timing": "info",
+    "torso lean": "info",
+    "bar over midfoot": "info",
+    "knee tracking": "good",
+    "hip shift": "fault",
+    "bar level": "warn",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "framing",
+   "joint visibility"
+  ]
+ },
+ "data/samples/bench_side_demo.webm": {
+  "lift": "bench_press",
+  "view": "oblique",
+  "reps": 2,
+  "ignored": [],
+  "sets": [
+   "2.0-7.1s"
+  ],
+  "findings": [
+   {
+    "depth": "good",
+    "lockout": "good",
+    "touch point": "info",
+    "bar path": "info",
+    "hips on bench": "info",
+    "bar level": "info",
+    "tempo": "info"
+   },
+   {
+    "depth": "good",
+    "lockout": "good",
+    "touch point": "info",
+    "bar path": "info",
+    "hips on bench": "info",
+    "bar level": "info"
+   }
+  ],
+  "setup_fixes": [
+   "view angle"
+  ]
+ },
+ "data/samples/bench_ymove_demo.webm": {
+  "lift": "bench_press",
+  "view": "front",
+  "reps": 3,
+  "ignored": [],
+  "sets": [
+   "1.6-14.2s"
+  ],
+  "findings": [
+   {
+    "depth": "good",
+    "lockout": "good",
+    "touch point": "info",
+    "bar path": "info",
+    "hips on bench": "info",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "good",
+    "lockout": "good",
+    "touch point": "info",
+    "bar path": "info",
+    "hips on bench": "info",
+    "bar level": "good",
+    "tempo": "info"
+   },
+   {
+    "depth": "good",
+    "lockout": "good",
+    "touch point": "info",
+    "bar path": "info",
+    "hips on bench": "info",
+    "bar level": "good",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "view angle"
+  ]
+ },
+ "data/samples/deadlift_side_demo.webm": {
+  "lift": "deadlift",
+  "view": "oblique",
+  "reps": 2,
+  "ignored": [],
+  "sets": [
+   "1.5-7.4s"
+  ],
+  "findings": [
+   {
+    "hip/chest timing": "good",
+    "start position": "info",
+    "bar path": "info",
+    "lockout": "good",
+    "lean back": "info",
+    "tempo": "info"
+   },
+   {
+    "hip/chest timing": "good",
+    "start position": "info",
+    "bar path": "info",
+    "lockout": "good",
+    "lean back": "info"
+   }
+  ],
+  "setup_fixes": [
+   "framing",
+   "view angle"
+  ]
+ },
+ "data/samples/deadlift_pesomuerto.webm": {
+  "lift": "deadlift",
+  "view": "side",
+  "reps": 1,
+  "ignored": [],
+  "sets": [
+   "11.4-21.5s"
+  ],
+  "findings": [
+   {
+    "hip/chest timing": "fault",
+    "start position": "good",
+    "bar path": "warn",
+    "lockout": "good",
+    "lean back": "warn",
+    "tempo": "info"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt",
+   "skipped reps",
+   "tracking"
+  ]
+ },
+ "data/samples/deadlift_sumo.webm": {
+  "lift": "deadlift",
+  "view": "side",
+  "reps": 1,
+  "ignored": [],
+  "sets": [
+   "6.1-22.0s"
+  ],
+  "findings": [
+   {
+    "hip/chest timing": "good",
+    "start position": "warn",
+    "bar path": "warn",
+    "lockout": "good",
+    "lean back": "warn"
+   }
+  ],
+  "setup_fixes": [
+   "camera tilt"
+  ]
+ }
+}

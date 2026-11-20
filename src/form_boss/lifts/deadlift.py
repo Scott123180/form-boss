@@ -8,7 +8,7 @@ from .. import geometry as G
 from ..geometry import Geometry
 from ..pose import PoseTrack
 from ..reps import Rep
-from .base import Finding, Lift, Metrics, Series, Signals
+from .base import Finding, Lift, Metrics, Profile, Series, Signals
 
 # Wrist and foot tracking below this is a guess (from the side the near plate covers the hands and
 # feet while the bar is low), so the checks that use them stand down.
@@ -69,22 +69,23 @@ def metrics(sig: Signals, g: Geometry, r: Rep, fps: float) -> Metrics:
     }
 
 
-def hips_first(m: Metrics, g: Geometry) -> Finding:
+def hips_first(m: Metrics, g: Geometry, p: Profile) -> Finding:
     d = m["lean_increase_off_floor"]
-    if d < 5:
+    if d < p.tol(5):
         return Finding("hip/chest timing", "good", "Hips and shoulders rise together off the floor.")
-    return Finding("hip/chest timing", "warn" if d < 10 else "fault",
+    return Finding("hip/chest timing", "warn" if d < p.tol(10) else "fault",
                    f"Torso tips {d:.0f} deg further forward before the bar reaches the knees; the "
                    "hips are rising before the bar moves. Push the floor away with your legs and keep "
                    "the chest up until the bar passes the knees.")
 
 
-def start_position(m: Metrics, g: Geometry) -> Finding:
+def start_position(m: Metrics, g: Geometry, p: Profile) -> Finding:
     if m["bar_visibility"] < MIN_BAR_VIS:
         return Finding("start position", "info", "Not assessed: the hands are hidden at the start "
                        "(usually by the near plate).", needs_view="side")
     a, hip = m["shoulder_ahead_of_bar_cm"], m["hip_angle_start"]
-    if a < -3:
+    # Sumo: the wide stance lets the torso sit more upright, shoulders over or just behind the bar.
+    if a < -p.tol(6 if p.variation == "sumo" else 3):
         return Finding("start position", "warn", f"Shoulders start {-a:.0f} cm behind the bar (hip "
                        f"angle {hip:.0f} deg): hips too low, squatting the weight up. Raise the hips "
                        "until the shoulders are over or just ahead of the bar.", needs_view="side")
@@ -92,44 +93,44 @@ def start_position(m: Metrics, g: Geometry) -> Finding:
                    f"angle {hip:.0f} deg).", needs_view="side")
 
 
-def bar_path(m: Metrics, g: Geometry) -> Finding:
+def bar_path(m: Metrics, g: Geometry, p: Profile) -> Finding:
     if m["bar_visibility"] < MIN_BAR_VIS:
         return Finding("bar path", "info", "Not assessed: the hands or feet are hidden while the bar "
                        "is low (usually by the near plate). Film from slightly in front of side-on.",
                        needs_view="side")
     off, drift = m["bar_offset_start_cm"], m["bar_drift_forward_cm"]
-    half_foot = g.foot * 100 / 2
+    half_foot = p.tol(g.foot * 100 / 2)
     if abs(off) > half_foot:
         where = "ahead of" if off > 0 else "behind"
         return Finding("bar path", "warn", f"Bar starts {abs(off):.0f} cm {where} midfoot. Set up "
                        "with the bar over the middle of the foot, about an inch from the shins.",
                        needs_view="side")
-    if drift > 5:
+    if drift > p.tol(5):
         return Finding("bar path", "warn", f"Bar drifts {drift:.0f} cm forward on the way up. Keep "
                        "the lats tight and drag it up the legs.", needs_view="side")
     return Finding("bar path", "good", f"Bar starts over midfoot and stays close (drifts "
                    f"{max(drift, 0):.0f} cm).", needs_view="side")
 
 
-def lockout(m: Metrics, g: Geometry) -> Finding:
+def lockout(m: Metrics, g: Geometry, p: Profile) -> Finding:
     hip, knee = m["hip_angle_top"], m["knee_angle_top"]
-    if hip >= 165 and knee >= 160:
+    if hip >= p.limit(180, 165) and knee >= p.limit(180, 160):
         return Finding("lockout", "good", f"Full lockout (hips {hip:.0f} deg, knees {knee:.0f} deg).")
     return Finding("lockout", "warn", f"Stops short of lockout (hips {hip:.0f} deg, knees {knee:.0f} "
                    "deg). Finish standing tall with the hips all the way through.")
 
 
-def lean_back(m: Metrics, g: Geometry) -> Finding:
+def lean_back(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a = m["lean_back_top"]
-    if a < 8:
+    if a < p.tol(8):
         return Finding("lean back", "good", "Stands straight at the top.", needs_view="side")
-    return Finding("lean back", "warn" if a < 15 else "fault",
+    return Finding("lean back", "warn" if a < p.tol(15) else "fault",
                    f"Leaning back {a:.0f} deg at the top, which loads the lower back for nothing. "
                    "Stand tall with glutes squeezed; the lift is done when hips and knees are straight.",
                    needs_view="side")
 
 
-def tempo(m: Metrics, g: Geometry) -> Finding:
+def tempo(m: Metrics, g: Geometry, p: Profile) -> Finding:
     return Finding("tempo", "info", f"Pulling {m['pulling_s']:.1f}s, lowering {m['lowering_s']:.1f}s.")
 
 
@@ -145,6 +146,9 @@ LIFT = Lift(
     phases=("pulling", "lockout", "lowering"),
     min_dip=40.0,
     joints=("shoulder", "hip", "knee"),
+    planted_feet=False,   # from the side the plates hide the feet
+    variations={"conventional": "feet about hip width, hands outside the knees (default)",
+                "sumo": "wide stance, hands inside the knees: a more upright start is expected"},
     camera="Put the camera at hip height, square to your side, far enough back that the whole bar "
            "and your feet stay in frame. Hands and feet hidden by the plate make the bar checks stand down.",
 )

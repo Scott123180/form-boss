@@ -12,7 +12,7 @@ from .. import geometry as G
 from ..geometry import Geometry
 from ..pose import PoseTrack
 from ..reps import Rep
-from .base import Finding, Lift, Metrics, Series, Signals, tempo_finding
+from .base import Finding, Lift, Metrics, Profile, Series, Signals, tempo_finding
 
 
 def signals(t: PoseTrack, g: Geometry) -> Signals:
@@ -51,13 +51,13 @@ def metrics(sig: Signals, g: Geometry, r: Rep, fps: float) -> Metrics:
 # fold away from the camera, so hand height is used instead: about a third of an arm length above
 # the shoulders with the weight behind the head, a full arm length at lockout.
 
-def stretch(m: Metrics, g: Geometry) -> Finding:
+def stretch(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a, h = m["elbow_angle_bottom"], m["hand_height_bottom_pct"]
     cue = "Lower the weight behind your head until the forearms pass parallel to the floor."
     if g.view == "side":
-        if a <= 75:
+        if a <= p.limit(50, 75):
             return Finding("bottom range", "good", f"Full stretch behind the head (elbows bent to {a:.0f} deg).")
-        return Finding("bottom range", "warn" if a <= 95 else "fault",
+        return Finding("bottom range", "warn" if a <= p.limit(50, 95) else "fault",
                        f"Short at the bottom (elbows only bent to {a:.0f} deg). {cue}")
     if h <= 60:   # the hands are hidden behind the head here, so only a clearly short rep is called out
         return Finding("bottom range", "good", "Weight comes down behind the head.")
@@ -65,7 +65,7 @@ def stretch(m: Metrics, g: Geometry) -> Finding:
                    f"Short at the bottom (hands stay {h:.0f}% of arm length above the shoulders). {cue}")
 
 
-def lockout(m: Metrics, g: Geometry) -> Finding:
+def lockout(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a, h = m["elbow_angle_top"], m["hand_height_top_pct"]
     if (a >= 155) if g.view == "side" else (h >= 80):
         return Finding("lockout", "good", "Arms straighten overhead.")
@@ -74,37 +74,37 @@ def lockout(m: Metrics, g: Geometry) -> Finding:
                    "are straight.")
 
 
-def upper_arm(m: Metrics, g: Geometry) -> Finding:
+def upper_arm(m: Metrics, g: Geometry, p: Profile) -> Finding:
     tilt, travel = m["upper_arm_from_vertical"], m["upper_arm_travel"]
-    if travel >= 25:
-        return Finding("upper arm", "warn" if travel < 40 else "fault",
+    if travel >= p.tol(25):
+        return Finding("upper arm", "warn" if travel < p.tol(40) else "fault",
                        f"Upper arms move {travel:.0f} deg during the rep, turning it into a press. "
                        "Keep the elbows fixed in space and hinge only at the elbow.", needs_view="side")
-    if tilt >= 30:
+    if tilt >= p.tol(30):
         return Finding("upper arm", "warn", f"Elbows sit {tilt:.0f} deg forward of vertical. Point "
                        "them at the ceiling, biceps beside your ears.", needs_view="side")
     return Finding("upper arm", "good", "Upper arms stay vertical and still.", needs_view="side")
 
 
-def elbow_flare(m: Metrics, g: Geometry) -> Finding:
+def elbow_flare(m: Metrics, g: Geometry, p: Profile) -> Finding:
     w = m["elbow_width_x_shoulders"]
-    if w <= 1.4:
+    if w <= p.limit(1.0, 1.4):
         return Finding("elbow flare", "good", "Elbows stay tucked in.", needs_view="front")
-    return Finding("elbow flare", "warn" if w <= 1.8 else "fault",
+    return Finding("elbow flare", "warn" if w <= p.limit(1.0, 1.8) else "fault",
                    f"Elbows flare out to {w:.1f}x shoulder width. Pull them in so they point "
                    "forward, not out to the sides.", needs_view="front")
 
 
-def lean_back(m: Metrics, g: Geometry) -> Finding:
+def lean_back(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a = m["torso_lean_max"]
-    if a < 10:
+    if a < p.tol(10):
         return Finding("back arch", "good", "Torso stays upright.", needs_view="side")
-    return Finding("back arch", "warn" if a < 18 else "fault",
+    return Finding("back arch", "warn" if a < p.tol(18) else "fault",
                    f"Leaning back {a:.0f} deg. Keep ribs down and glutes tight so the lower back "
                    "does not arch.", needs_view="side")
 
 
-def tempo(m: Metrics, g: Geometry) -> Finding:
+def tempo(m: Metrics, g: Geometry, p: Profile) -> Finding:
     return tempo_finding(m, "lowering", "extending", 0.6)
 
 

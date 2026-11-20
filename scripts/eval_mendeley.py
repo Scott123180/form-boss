@@ -3,6 +3,7 @@
     uv run python scripts/eval_mendeley.py                  # every exercise that has been fetched
     uv run python scripts/eval_mendeley.py push_up squat    # just these
     uv run python scripts/eval_mendeley.py --pages          # also build the result page per clip
+    uv run python scripts/eval_mendeley.py squat --view front   # another camera view
 
 Writes out/mendeley_eval/<exercise>.csv (one row per clip) and prints a summary. Pose tracking is the
 slow part and is cached in out/mendeley/.tracks; delete that folder after changing pose.py.
@@ -18,6 +19,7 @@ from pathlib import Path
 
 from form_boss import pose
 from form_boss.cli import analyze
+from form_boss.errors import FormBossError
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "mendeley"
@@ -35,6 +37,7 @@ EXERCISES = {
     "abs": ("side_bend", "front"),
 }
 PAGES = "--pages" in sys.argv
+VIEW = sys.argv[sys.argv.index("--view") + 1] if "--view" in sys.argv else ""
 
 
 def run(job: tuple[Path, str]) -> dict:
@@ -48,7 +51,7 @@ def run(job: tuple[Path, str]) -> dict:
             track = pose.track(video)
             cache.write_bytes(pickle.dumps(track))
         res = analyze(video, lift, OUT / video.stem, page=PAGES, track=track)
-    except SystemExit as e:
+    except FormBossError as e:
         return {**row, "error": str(e)}
     reps = res["reps"]
     row |= {"view": res["view"], "setup_issues": sum(not s["ok"] for s in res["setup"]),
@@ -71,6 +74,7 @@ def usable(r: dict) -> bool:  # enough cleanly tracked reps to say anything
 
 def evaluate(exercise: str, ex: ProcessPoolExecutor) -> None:
     lift, view = EXERCISES[exercise]
+    view = VIEW or view
     # The dataset contains the same file under more than one name/label; keep only unambiguous clips.
     by_hash: dict[str, list[Path]] = {}
     for v in sorted((DATA / exercise / view).glob("*/*.mp4")):
@@ -86,7 +90,8 @@ def evaluate(exercise: str, ex: ProcessPoolExecutor) -> None:
     rows = list(ex.map(run, [(v, lift) for v in videos]))
     keys = list(dict.fromkeys(k for r in rows for k in r))
     (ROOT / "out" / "mendeley_eval").mkdir(parents=True, exist_ok=True)
-    with open(ROOT / "out" / "mendeley_eval" / f"{exercise}.csv", "w", newline="") as f:
+    suffix = f"_{view}" if VIEW else ""
+    with open(ROOT / "out" / "mendeley_eval" / f"{exercise}{suffix}.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys)
         w.writeheader()
         w.writerows(rows)
@@ -123,7 +128,7 @@ def evaluate(exercise: str, ex: ProcessPoolExecutor) -> None:
 
 
 def main() -> None:
-    names = [a for a in sys.argv[1:] if not a.startswith("--")] or list(EXERCISES)
+    names = [a for a in sys.argv[1:] if not a.startswith("--") and a != VIEW] or list(EXERCISES)
     TRACKS.mkdir(parents=True, exist_ok=True)
     with ProcessPoolExecutor(max_workers=6) as ex:
         for name in names:

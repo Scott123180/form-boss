@@ -9,7 +9,7 @@ from .. import geometry as G
 from ..geometry import Geometry
 from ..pose import PoseTrack
 from ..reps import Rep
-from .base import Finding, Lift, Metrics, Series, Signals, tempo_finding
+from .base import Finding, Lift, Metrics, Profile, Series, Signals, tempo_finding
 
 
 def signals(t: PoseTrack, g: Geometry) -> Signals:
@@ -60,73 +60,73 @@ def metrics(sig: Signals, g: Geometry, r: Rep, fps: float) -> Metrics:
     }
 
 
-def depth(m: Metrics, g: Geometry) -> Finding:
+def depth(m: Metrics, g: Geometry, p: Profile) -> Finding:
     # With the bar on the chest the wrists sit about a chest's depth above the shoulder joints,
     # roughly 20-30% of arm length.
     h = m["hand_height_bottom_pct"]
-    if h <= 35:
+    if h <= p.limit(25, 35):
         return Finding("depth", "good", "Bar comes down to the chest.")
-    if h <= 50:
+    if h <= p.limit(25, 50):
         return Finding("depth", "warn", f"Bar may stop short of the chest (hands still {h:.0f}% of "
                        "arm length above the shoulders). Touch the chest on every rep.")
     return Finding("depth", "fault", f"Half rep: bar stops well above the chest (hands {h:.0f}% of "
                    "arm length above the shoulders). Lower it until it touches; go lighter if needed.")
 
 
-def lockout(m: Metrics, g: Geometry) -> Finding:
+def lockout(m: Metrics, g: Geometry, p: Profile) -> Finding:
     a, h = m["elbow_angle_top"], m["hand_height_top_pct"]
-    if a >= 155 and h >= 80:
+    if a >= p.limit(180, 155) and h >= p.limit(100, 80):
         return Finding("lockout", "good", f"Arms lock out at the top (elbows {a:.0f} deg).")
     return Finding("lockout", "warn", f"Arms stay bent at the top (elbows {a:.0f} deg). Press to "
                    "straight arms before the next rep.")
 
 
-def touch_point(m: Metrics, g: Geometry) -> Finding:
-    p = m["touch_point_pct"]
-    if p < 15:
-        return Finding("touch point", "warn", f"Bar touches high on the chest ({p:.0f}% of the way "
+def touch_point(m: Metrics, g: Geometry, p: Profile) -> Finding:
+    pos = m["touch_point_pct"]
+    if pos < p.limit(37, 15):
+        return Finding("touch point", "warn", f"Bar touches high on the chest ({pos:.0f}% of the way "
                        "from shoulders to hips), which usually goes with elbows flared out to the "
                        "sides and is hard on the shoulders. Tuck the elbows somewhat and touch at "
                        "the lower chest.", needs_view="side")
-    if p > 60:
-        return Finding("touch point", "warn", f"Bar touches low, near the belly ({p:.0f}% of the way "
+    if pos > p.limit(37, 60):
+        return Finding("touch point", "warn", f"Bar touches low, near the belly ({pos:.0f}% of the way "
                        "from shoulders to hips). Bring it down to the bottom of the breastbone.",
                        needs_view="side")
-    return Finding("touch point", "good", f"Bar touches the mid-to-lower chest ({p:.0f}% of the way "
+    return Finding("touch point", "good", f"Bar touches the mid-to-lower chest ({pos:.0f}% of the way "
                    "from shoulders to hips).", needs_view="side")
 
 
-def finish_point(m: Metrics, g: Geometry) -> Finding:
-    p = m["finish_point_pct"]
-    if abs(p) <= 15:
+def finish_point(m: Metrics, g: Geometry, p: Profile) -> Finding:
+    pos = m["finish_point_pct"]
+    if abs(pos) <= p.tol(15):
         return Finding("bar path", "good", "Bar finishes over the shoulders.", needs_view="side")
-    where = "toward your feet, over the chest" if p > 0 else "behind the shoulders, over the face"
-    return Finding("bar path", "warn", f"Bar locks out {abs(p):.0f}% of torso length {where}. "
+    where = "toward your feet, over the chest" if pos > 0 else "behind the shoulders, over the face"
+    return Finding("bar path", "warn", f"Bar locks out {abs(pos):.0f}% of torso length {where}. "
                    "Press up and slightly back so it finishes straight above the shoulders.",
                    needs_view="side")
 
 
-def hips_down(m: Metrics, g: Geometry) -> Finding:
+def hips_down(m: Metrics, g: Geometry, p: Profile) -> Finding:
     d = m["hip_rise_pct"]
-    if d < 8:
+    if d < p.tol(8):
         return Finding("hips on bench", "good", "Hips stay on the bench.", needs_view="side")
-    return Finding("hips on bench", "warn" if d < 15 else "fault",
+    return Finding("hips on bench", "warn" if d < p.tol(15) else "fault",
                    f"Hips rise off the bench during the press (by {d:.0f}% of torso length). Keep "
                    "the glutes down and drive through the feet into the floor, not up.",
                    needs_view="side")
 
 
-def bar_level(m: Metrics, g: Geometry) -> Finding:
+def bar_level(m: Metrics, g: Geometry, p: Profile) -> Finding:
     # Wrist tracking jitters by a few degrees on a level bar; 8 deg is ~10 cm end to end on a
     # typical grip, which is a visible tilt.
     a = m["bar_tilt_max"]
-    if a < 8:
+    if a < p.tol(8):
         return Finding("bar level", "good", "Bar stays level.", needs_view="front")
     return Finding("bar level", "warn", f"Bar tilts up to {a:.0f} deg; one side lags. Press both "
                    "sides evenly and check your grip is centred.", needs_view="front")
 
 
-def tempo(m: Metrics, g: Geometry) -> Finding:
+def tempo(m: Metrics, g: Geometry, p: Profile) -> Finding:
     return tempo_finding(m, "lowering", "pressing", 0.5)
 
 
@@ -146,6 +146,7 @@ LIFT = Lift(
     min_phase_s=0.25,
     min_depth_frac=0.6,
     joints=("shoulder", "elbow", "wrist", "hip"),
+    planted_feet=False,
     camera="Put the camera at bench height, square to your side and a step toward your feet so the "
            "near plate does not cover your shoulder, with the whole bench in frame.",
 )

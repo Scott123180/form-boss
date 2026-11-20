@@ -28,7 +28,7 @@ def _text(img, s, org, scale, color=(255, 255, 255)):
 
 
 def render(video: Path, out: Path, t: PoseTrack, lift: Lift, sig: Signals, reps: list[Rep],
-           reports: list[RepReport]) -> Path:
+           reports: list[RepReport], view: str = "side") -> Path:
     path = geometry.mid(t, lift.path_point)
     cap = cv2.VideoCapture(str(video))
     tmp = out.with_suffix(".tmp.mp4")
@@ -40,6 +40,8 @@ def render(video: Path, out: Path, t: PoseTrack, lift: Lift, sig: Signals, reps:
         ok, frame = cap.read()
         if not ok:
             break
+        for _ in range(t.stride - 1):   # frames the analysis skipped on high-fps footage
+            cap.grab()
         pts = t.image[i].astype(int)
 
         for a, b in P.SKELETON:
@@ -60,7 +62,7 @@ def render(video: Path, out: Path, t: PoseTrack, lift: Lift, sig: Signals, reps:
         done = sum(1 for r in reps if r.bottom <= i)
         y = int(44 * k)
         _text(frame, f"Rep {done}/{len(reps)}", (int(16 * k), y), 1.0 * k)
-        for s in lift.chart:
+        for s in lift.charts(view):
             y += int(34 * k)
             _text(frame, f"{s.label.lower()} {sig[s.key][i]:4.0f}", (int(16 * k), y), 0.7 * k)
 

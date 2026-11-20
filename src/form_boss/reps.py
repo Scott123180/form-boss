@@ -64,14 +64,30 @@ def segment(signal: np.ndarray, fps: float, min_dip: float = 35.0, near: float =
 
     if min_depth_frac > 0 and bottoms:
         # Removing a shallow dip only lengthens its neighbours, so the quick check still holds.
-        depth = np.array([top - signal[b] for b in bottoms])
-        typical = float(np.percentile(depth, 75))
-        shallow = depth < min_depth_frac * typical
-        ignored += [Ignored(c[0], "shallow", value=float(d / typical))
-                    for c, d, sh in zip(cands, depth, shallow) if sh]
-        bottoms = [b for b, sh in zip(bottoms, shallow) if not sh]
+        shallow = _shallow(signal, bottoms, min_depth_frac)
+        ignored += [Ignored(c[0], "shallow", value=v) for c, v in zip(cands, shallow) if v is not None]
+        bottoms = [b for b, v in zip(bottoms, shallow) if v is None]
         cands = _bound(signal, bottoms, near_top)
     return [c[0] for c in cands], sorted(ignored, key=lambda x: x.rep.start)
+
+
+def _shallow(signal: np.ndarray, bottoms: list[int], frac: float) -> list[float | None]:
+    """Depth as a share of the typical rep's for each dip shallower than `frac` of it, else None."""
+    top = float(np.percentile(signal, 95))
+    depth = np.array([top - signal[b] for b in bottoms])
+    typical = float(np.percentile(depth, 75))
+    return [float(d / typical) if d < frac * typical else None for d in depth]
+
+
+def drop_shallow(reps: list[Rep], signal: np.ndarray, frac: float) -> tuple[list[Rep], list[Ignored]]:
+    """The shallow-dip rule of `segment` again, for after other dips have been set aside: walking
+    and getting into position can be deep, and while they are counted the typical rep looks deeper
+    than the working reps and a half-depth unrack passes as a rep."""
+    if frac <= 0 or len(reps) < 2:
+        return reps, []
+    v = _shallow(signal, [r.bottom for r in reps], frac)
+    return ([r for r, x in zip(reps, v) if x is None],
+            [Ignored(r, "shallow", value=x) for r, x in zip(reps, v) if x is not None])
 
 
 def _bound(signal: np.ndarray, bottoms: list[int], near_top: float) -> list[tuple[Rep, bool, bool]]:

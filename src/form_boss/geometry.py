@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
+from scipy.ndimage import percentile_filter
 
 from . import pose as P
 from .pose import PoseTrack
@@ -51,6 +52,9 @@ class Geometry:
     mode: str = "3d"            # "side-2d": angles measured directly in the image plane
     near: int = 0               # 0 = left side of the body is the better-seen one, 1 = right
     facing: float = 1.0         # side view: +1 if the lifter faces image right, -1 if left
+    camera_pitch: float = 0.0   # degrees the camera looks up (+) or down (-), from the standing lifter
+    camera_roll: float = 0.0    # degrees "up" in the picture is turned from true vertical at the lifter
+    corrected: str = ""         # how measurements were corrected for the camera tilt, if at all
 
     @property
     def view(self) -> str:
@@ -148,6 +152,108 @@ def compute(t: PoseTrack) -> Geometry:
     )
 
 
+# ---- Camera tilt --------------------------------------------------------------------------------
+#
+# A standing lifter's leg is vertical (the median lean on the Mendeley side views is 0.6 deg), so it
+# shows which way is up at the lifter: in the picture, where it gives the camera's sideways roll
+# plus the keystone lean that looking up or down adds away from the picture's centre, and in the
+# pose model's 3D estimate, where it also shows the camera looking up or down (pitch).
+#
+# The 3D estimate's pitch is rough: on the user's floor-level clips, filmed looking ~30 deg up, it
+# reads ~11 deg. It is only used to decide when 3D is worth falling back on.
+
+ROLL_MIN_DEG = 2.0    # less than this is within tracking noise and natural lean: left alone
+ROLL_MAX_DEG = 15.0   # more than this and the "standing" frames are probably not upright
+PITCH_3D_DEG = 10.0   # camera pitched further than this: thigh angle and depth from levelled 3D
+
+
+def standing(t: PoseTrack, g: Geometry) -> np.ndarray:
+    """(T,) frames where the lifter stands tall: knee and hip straight, leg near vertical."""
+    sides = (g.near,) if g.view == "side" else (0, 1)
+    knee = np.min([image_angle(t, "hip", "knee", "ankle", s) for s in sides], axis=0)
+    hip = np.min([image_angle(t, "shoulder", "hip", "knee", s) for s in sides], axis=0)
+    return (knee > 168) & (hip > 165) & (np.abs(_leg_tilt(t, g)) < 20) & t.found
+
+
+def _leg_tilt(t: PoseTrack, g: Geometry) -> np.ndarray:
+    """Ankle-to-hip direction in the picture, degrees from straight up, + = top leaning right."""
+    if g.view == "side":
+        d = t.image[:, JOINTS["hip"][g.near]] - t.image[:, JOINTS["ankle"][g.near]]
+    else:
+        d = mid(t, "hip") - mid(t, "ankle")
+    return np.degrees(np.arctan2(d[:, 0], -d[:, 1]))
+
+
+def camera_tilt(t: PoseTrack, g: Geometry) -> tuple[float, float, np.ndarray | None]:
+    """(roll, pitch, up): picture tilt at the lifter (+ = up leans right), camera pitch (+ = looking
+    up), and the 3D up direction, from the frames where the lifter stands tall. Zeros and None
+    when there are fewer than half a second of them (bench, push-up, a clip that starts mid-set)."""
+    st = standing(t, g)
+    if st.sum() < max(5, int(0.5 * t.fps)):
+        return 0.0, 0.0, None
+    roll = float(np.median(_leg_tilt(t, g)[st]))
+    if g.view == "side":
+        d = t.world[:, JOINTS["hip"][g.near]] - t.world[:, JOINTS["ankle"][g.near]]
+    else:
+        d = _mid(t.world, *JOINTS["hip"]) - _mid(t.world, *JOINTS["ankle"])
+    d = d[st] / (np.linalg.norm(d[st], axis=-1, keepdims=True) + 1e-9)
+    up = np.median(d, axis=0)
+    up /= np.linalg.norm(up) + 1e-9
+    pitch = float(np.degrees(np.arctan2(up[2], -up[1])))   # top further from the camera: looking up
+    return roll, pitch, up
+
+
+def _rotation_to_up(up: np.ndarray) -> np.ndarray:
+    """Rotation matrix taking `up` to (0, -1, 0), straight up in the pose model's y-down axes."""
+    target = np.array([0.0, -1.0, 0.0])
+    v, c = np.cross(up, target), float(up @ target)
+    s = float(np.linalg.norm(v))
+    if s < 1e-9:
+        return np.eye(3)
+    k = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + k + k @ k * ((1 - c) / s ** 2)
+
+
+def _level_image(t: PoseTrack, roll: float) -> np.ndarray:
+    """Image coordinates turned by -roll about the lifter's hips, so standing reads vertical."""
+    a = np.radians(-roll)
+    rot = np.array([[np.cos(a), -np.sin(a)], [np.sin(a), np.cos(a)]])
+    c = np.median(mid(t, "hip")[t.found], axis=0)
+    return (t.image - c) @ rot.T + c
+
+
+def calibrate(t: PoseTrack) -> tuple[PoseTrack, Geometry]:
+    """Geometry corrected for camera tilt, and the track to take further measurements from.
+
+    - The 3D estimate is turned so the standing leg points straight up, making "vertical" and
+      "horizontal" in every 3D measurement true ones rather than the camera's.
+    - The picture is turned by the camera's roll at the lifter (2-15 deg), for the measurements
+      taken against the picture's vertical: torso lean, thigh angle, bar over midfoot. Joint angles
+      do not change. The returned track is for measuring only; draw with the original.
+    - From the side with the camera pitched more than PITCH_3D_DEG, thigh angle and depth come from
+      the levelled 3D estimate: looking up or down at an angle makes level lines that are not square
+      to the camera slope in the picture.
+    """
+    g0 = compute(t)
+    roll, pitch, up = camera_tilt(t, g0)
+    notes = []
+    tm = t
+    if up is not None:
+        tm = replace(tm, world=t.world @ _rotation_to_up(up).T)
+    if ROLL_MIN_DEG <= abs(roll) <= ROLL_MAX_DEG:
+        tm = replace(tm, image=_level_image(t, roll))
+        notes.append(f"picture levelled by {abs(roll):.0f} deg")
+    g = compute(tm)
+    if g.mode == "side-2d" and up is not None and abs(pitch) > PITCH_3D_DEG:
+        hip, knee = tm.world[:, JOINTS["hip"][g.near]], tm.world[:, JOINTS["knee"][g.near]]
+        v = knee - hip
+        g.thigh_angle = np.degrees(np.arcsin(np.clip(v[:, 1] / (np.linalg.norm(v, axis=-1) + 1e-9), -1, 1)))
+        g.hip_below_knee = hip[:, 1] - knee[:, 1]
+        notes.append("thigh angle and depth from the levelled 3D estimate (camera pitched)")
+    g.camera_roll, g.camera_pitch, g.corrected = roll, pitch, "; ".join(notes)
+    return tm, g
+
+
 # ---- Measurements lifts build their signals from -------------------------------------------------
 #
 # A joint angle is only readable straight off the image when the joint moves in the image plane:
@@ -212,6 +318,35 @@ def tilt_mid(t: PoseTrack, a: str, b: str) -> np.ndarray:
     return np.degrees(np.arctan2(d[:, 0], -d[:, 1]))
 
 
+def in_frame(t: PoseTrack, joints: tuple[str, ...], margin: float = 0.01) -> np.ndarray:
+    """(T,) whether every joint in `joints` is inside the picture on at least one side of the body.
+    The model still places joints it cannot see, but those are guesses."""
+    x, y = t.image[..., 0], t.image[..., 1]
+    inside = ((x > margin * t.width) & (x < (1 - margin) * t.width)
+              & (y > margin * t.height) & (y < (1 - margin) * t.height))
+    return np.all([inside[:, JOINTS[j][0]] | inside[:, JOINTS[j][1]] for j in joints], axis=0)
+
+
+# Phone main cameras film video with a ~65-70 deg field of view across the long side of the frame.
+FOCAL_X_LONG_SIDE = 0.8
+
+
+def width_at_hips(t: PoseTrack, joint: str) -> np.ndarray:
+    """Left-to-right distance between the two `joint`s in pixels, rescaled to how it would look at
+    the hips' distance from the camera. From the front, knees pushed forward at the bottom of a
+    squat are closer to the camera than the ankles and look wider apart than they are (and from
+    behind, narrower). Uses the 3D estimate's depth offsets and a camera distance worked out from
+    shoulder width. For front and rear views."""
+    im, w = t.image, t.world
+    f = FOCAL_X_LONG_SIDE * max(t.width, t.height)
+    sh_px = np.abs(im[:, JOINTS["shoulder"][0], 0] - im[:, JOINTS["shoulder"][1], 0])
+    sh_m = np.linalg.norm(w[:, JOINTS["shoulder"][0]] - w[:, JOINTS["shoulder"][1]], axis=-1)
+    dist = np.median(f * sh_m[t.found] / np.maximum(sh_px[t.found], 1.0))   # camera to hips, metres
+    z = _mid(w, *JOINTS[joint])[:, 2]   # depth of the joint pair relative to the hips, + = further
+    px = np.abs(im[:, JOINTS[joint][0], 0] - im[:, JOINTS[joint][1], 0])
+    return px * (dist + z) / dist
+
+
 def mid(t: PoseTrack, joint: str) -> np.ndarray:
     """(T, 2) midpoint of the left and right `joint` in pixels."""
     return _mid(t.image, *JOINTS[joint])
@@ -223,3 +358,15 @@ def hand_height(t: PoseTrack, side: int) -> np.ndarray:
     sh, el, wr = (im[:, JOINTS[j][side]] for j in ("shoulder", "elbow", "wrist"))
     arm = np.linalg.norm(sh - el, axis=-1) + np.linalg.norm(el - wr, axis=-1)
     return 100 * (sh[:, 1] - wr[:, 1]) / np.percentile(arm, 95)   # foreshortening only shortens
+
+
+def relative_to_standing(x: np.ndarray, fps: float, window_s: float = 8.0) -> np.ndarray:
+    """`x` as a share of its standing (high) level over the surrounding `window_s` seconds.
+
+    For lengths in the picture that a rep shortens (hip height above the ankles): the lifter's size
+    in the picture drifts as they walk toward or away from the camera, so the standing level is
+    taken locally, the 90th percentile of the window, which reps take only a small part of.
+    """
+    size = max(3, int(window_s * fps) | 1)
+    top = percentile_filter(x, 90, size=size, mode="nearest") if len(x) > size else np.full_like(x, np.percentile(x, 90))
+    return x / (top + 1e-9)
