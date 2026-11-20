@@ -92,6 +92,7 @@ Note: the two "120 fps" user clips are slow-motion clips exported at ~30 fps (3,
   - The tracked skeleton is split into tracklets wherever it jumps; the lifter is the tracklet with the largest summed body size, and other tracklets fill its gaps only if they stand where the lifter stands and are about the same size. On `row_oblique_30fps` this drops 18 s (44.8–63.3 s) where the tracker followed a man behind the lifter; those frames had been setting the view to "oblique 62 deg".
   - Tracking several people at once (MediaPipe `num_poses=3`) was tried and rejected: MediaPipe then re-detects people every frame instead of following the lifter, and the landmarks got ~8x noisier (the knee flipped at the bottom of every squat, splitting reps).
   - Setup advice when someone else was tracked for over 2% of the clip.
+  - Limit: the lifter's frames while someone else was tracked are lost. The design for recovering them (repair pass on a crop, subject choice, person boxes) is in [docs/lifter-tracking.md](docs/lifter-tracking.md).
 - [x] **Lift Auto-Detection (`lifts/detect.py`)** — done 2026-11-19
   - `--lift` defaults to `auto`. Rules on view-independent features: lying down (thigh direction in 3D), hips dropping, torso hinging, elbow bend while hinged, hand height, elbows staying up, sideways torso tilt.
   - All 16 regression clips; 374 of 414 Mendeley clips (90%; side and front views, all seven exercises). Weakest: front-view rows read as curls (the 3D estimate underestimates the hinge from the front), side bends with lots of forward fold.
